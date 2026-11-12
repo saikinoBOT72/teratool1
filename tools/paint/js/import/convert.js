@@ -1,9 +1,10 @@
 // マスの色 → ペンキの番号。背景除去・余白の切り詰め・色の調整（明るさ/コントラスト/鮮やかさ/色相）・使うペンキへの置きかえ
-import { st, MAX } from '../state.js';
+import { st, MAX, cellValue } from '../state.js';
 import { toLab, nearest } from './color.js';
 import { removeBackground } from './background.js';
 
-// opt = { bg, trim, bright, contrast, sat（-50..50）, hue（-180..180 度）, dither, allowed: 使うペンキの番号の配列 }
+// opt = { bg, trim, bright, contrast, sat（-50..50）, hue（-180..180 度）, dither,
+//         allowed: 使うペンキの番号の配列, walls: 使う壁の番号の配列 }。結果はマスの値（壁 × 29 + ペンキ）
 // 戻り値 { w, h, d: Uint8Array, removed, clipped, empty }
 export function convertCells(cells, opt) {
   let { w, h } = cells;
@@ -32,7 +33,8 @@ export function convertCells(cells, opt) {
   ow = Math.min(ow, MAX); oh = Math.min(oh, MAX);
 
   // 調整後の色を、使うペンキの中で一番近いものに。ディザは誤差を右・下へ配る（フロイド–スタインバーグ法）
-  const vals = opt.allowed.length ? opt.allowed : [1];
+  const vals = [];
+  for (const w of opt.walls) for (const p of (opt.allowed.length ? opt.allowed : [1])) vals.push(cellValue(p, w));
   const labs = vals.map((v) => { const c = st.rgbs[v - 1]; return toLab(c[0], c[1], c[2]); });
   const kL = opt.bright * 0.6, kK = 1 + opt.contrast / 50, kC = 1 + opt.sat / 50;
   const th = opt.hue * Math.PI / 180, cos = Math.cos(th) * kC, sin = Math.sin(th) * kC;

@@ -1,9 +1,10 @@
 // 作品と設定の保存（この端末のブラウザの localStorage のみ）
 //   teratool1.paint.settings      … 色の調整・表示設定・開いている作品
 //   teratool1.paint.works         … 作品の一覧 [{ id, name, w, h, updated }]
-//   teratool1.paint.work.<id>     … 作品の中身 { p: 2, w, h, d, navRow }
-//   p = ペンキの番号の付け方の版。p がないものは旧16色の番号なので、読み込み時に新しい番号へ置きかえる
-import { st, MAX, NPAINT } from '../state.js';
+//   teratool1.paint.work.<id>     … 作品の中身 { p: 3, w, h, d, navRow }
+//   p = マスの値の付け方の版（3 = 壁 × 29 + ペンキ）。古い版は起動時に一度だけ今の版へ置きかえて保存し直す
+//     p なし: 旧16色 / p: 2: ペンキ 1〜29 のみ（壁は全体で1つ）→ どちらも当時選んでいた壁として扱う
+import { st, MAX, NPAINT, NVAL, wallIndex } from '../state.js';
 import { uid, toast } from '../util.js';
 import { sampleWork } from './sample.js';
 
@@ -30,7 +31,7 @@ export function decode(s, n) {
   const d = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     const v = s.charCodeAt(i) - 48;
-    if (v < 0 || v > NPAINT) return null;
+    if (v < 0 || v > NVAL) return null;
     d[i] = v;
   }
   return d;
@@ -38,7 +39,7 @@ export function decode(s, n) {
 
 // 旧16色（濃い12色 + 黒・白・グレー・茶）→ 新しい番号（1 + PAINTS の位置）
 const OLD = { 1: 14, 2: 18, 3: 17, 4: 25, 5: 24, 6: 23, 7: 22, 8: 21, 9: 20, 10: 19, 11: 16, 12: 15, 13: 27, 14: 28, 15: 29, 16: 26 };
-export const PAINT_VERSION = 2;
+export const PAINT_VERSION = 3;
 
 // 保存形式（d は文字列）を検証して { w, h, d: Uint8Array, navRow } に
 export function parseWork(o) {
@@ -47,7 +48,11 @@ export function parseWork(o) {
   const d = decode(o.d, o.w * o.h);
   if (!d) return null;
   if (o.p !== PAINT_VERSION) {
-    for (let i = 0; i < d.length; i++) { if (d[i] > 16) return null; d[i] = d[i] ? OLD[d[i]] : 0; }
+    const old = o.p !== 2, max = old ? 16 : NPAINT, base = wallIndex() * NPAINT;
+    for (let i = 0; i < d.length; i++) {
+      if (d[i] > max) return null;
+      if (d[i]) d[i] = (old ? OLD[d[i]] : d[i]) + base;
+    }
   }
   const navRow = Number.isInteger(o.navRow) && o.navRow >= 0 && o.navRow < o.h ? o.navRow : o.h - 1;
   return { w: o.w, h: o.h, d, navRow };
@@ -125,7 +130,7 @@ function applySettings(o) {
   if (typeof o.grid === 'boolean') st.showGrid = o.grid;
   if (typeof o.major === 'boolean') st.showMajor = o.major;
   // v3 より前の選択中の色は旧16色の番号
-  if (o.v >= 3 && Number.isInteger(o.sel) && o.sel >= 0 && o.sel <= NPAINT) st.sel = o.sel;
+  if (o.v >= 3 && Number.isInteger(o.sel) && o.sel >= 0 && o.sel <= NPAINT) st.sel = o.sel; // ペンキ番号
   else if (OLD[o.sel]) st.sel = OLD[o.sel];
   if (o.colorMode === 'world' || o.colorMode === 'map') st.colorMode = o.colorMode;
   if (o.gem === 'other' || o.gem === 'diamond') st.gem = o.gem;
@@ -147,11 +152,22 @@ function migrateLegacy() {
   remove(K_LEGACY);
 }
 
+// 古い版の作品を今の版に置きかえて保存し直す（設定を読んだ後に呼ぶ）
+function migrateWorks() {
+  for (const e of listWorks()) {
+    const raw = read(kWork(e.id));
+    if (!raw || raw.p === PAINT_VERSION) continue;
+    const w = parseWork(raw);
+    if (w) write(kWork(e.id), { p: PAINT_VERSION, w: w.w, h: w.h, d: encode(w.d), navRow: w.navRow });
+  }
+}
+
 // 起動時: 設定を読み、最後に開いていた作品（なければサンプル）を開く
 export function boot() {
-  migrateLegacy();
   const s = read(K_SETTINGS);
   applySettings(s);
+  migrateLegacy();
+  migrateWorks();
   const list = listWorks();
   const ids = [s && s.current, ...list.map((e) => e.id)].filter(Boolean);
   for (const id of ids) if (applyWork(id)) return;

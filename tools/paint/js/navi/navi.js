@@ -1,5 +1,5 @@
 // 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を列番号つきで表示する
-import { st, paintName } from '../state.js';
+import { st, shortName, valueName, wallOf } from '../state.js';
 import { $, clamp, el } from '../util.js';
 import { addOverlay, schedule, stage } from '../render.js';
 import { updateReadout, fit } from '../view.js';
@@ -40,11 +40,12 @@ function renderPanel() {
     const li = el('li', r.v ? 'run' : 'run empty');
     if (r.v) {
       const sw = el('i'); sw.style.setProperty('--c', st.hex[r.v - 1]); li.appendChild(sw);
-      li.title = paintName(r.v);
+      li.title = valueName(r.v);
     }
     li.appendChild(el('b', null, (r.v ? '' : '空 ') + '×' + r.n));
+    if (r.v && wallOf(r.v)) li.appendChild(el('em', null, shortName(r.v).split('・')[1])); // ダイヤ・光の印
     li.appendChild(el('small', null, pos));
-    li.setAttribute('aria-label', `${r.v ? paintName(r.v) : '空き'} ${r.n}マス（${pos}列目）`);
+    li.setAttribute('aria-label', `${r.v ? valueName(r.v) : '空き'} ${r.n}マス（${pos}列目）`);
     list.appendChild(li);
   }
 }

@@ -1,9 +1,9 @@
 // 描く・塗りつぶし・図形・スポイト（左右対称に対応）。消すときは「透過」の色で塗る
-import { st } from './state.js';
+import { st, brushValue } from './state.js';
 import { clamp } from './util.js';
 import { markDirty, schedule } from './render.js';
 import { snapshot, pushUndo } from './history.js';
-import { setTool, setSel } from './palette.js';
+import { setTool, pickValue } from './palette.js';
 import { scheduleSave } from './works/store.js';
 import { plotLine, plotRect, plotEllipse } from './shapes.js';
 
@@ -33,7 +33,7 @@ function put(x, y, val) {
 
 function paintTo(c) {
   if (!c) { stroke.last = null; return; }
-  const val = st.sel; // 0 = 透過（消す）
+  const val = brushValue(); // 0 = 透過（消す）
   if (stroke.last) plotLine(stroke.last.x, stroke.last.y, c.x, c.y, (x, y) => put(x, y, val));
   else put(c.x, c.y, val);
   stroke.last = c;
@@ -43,7 +43,8 @@ function paintTo(c) {
 function shapeTo(c) {
   st.data.set(stroke.snap.d);
   stroke.changed = false;
-  SHAPES[st.tool](stroke.start.x, stroke.start.y, c.x, c.y, (x, y) => put(x, y, st.sel));
+  const val = brushValue();
+  SHAPES[st.tool](stroke.start.x, stroke.start.y, c.x, c.y, (x, y) => put(x, y, val));
   st.dirty = true;
 }
 
@@ -64,7 +65,7 @@ function flood(x, y, val) {
 }
 
 function pick(c) {
-  setSel(st.data[c.y * st.W + c.x]); // 何もないマスなら「透過」を選ぶ
+  pickValue(st.data[c.y * st.W + c.x]); // ペンキと壁の両方。何もないマスなら「透過」
   setTool('pen');
 }
 
@@ -77,8 +78,9 @@ export function beginAction(p) {
   if (st.tool === 'pick') { pick(c); return; }
   if (st.tool === 'fill') {
     const snap = snapshot();
-    let changed = flood(c.x, c.y, st.sel);
-    if (st.mirror) changed = flood(mirrorX(c.x), c.y, st.sel) || changed;
+    const val = brushValue();
+    let changed = flood(c.x, c.y, val);
+    if (st.mirror) changed = flood(mirrorX(c.x), c.y, val) || changed;
     if (changed) { pushUndo(snap); markDirty(); scheduleSave(); }
     return;
   }

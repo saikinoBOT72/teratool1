@@ -18,6 +18,7 @@ Terraria を遊ぶときに使う、自分用の小さな Web ツール集。
   ```
 - **GitHub Pages**: Settings → Pages → Source を「Deploy from a branch」、ブランチ `main` / フォルダ `/ (root)` にする
 - **スマホ**: ブラウザの「ホーム画面に追加」でアプリのように使える。一度開いたツールはオフラインでも動く
+- **アップデート**: 新しい版が出るとトップページに「アップデート」ボタンが出る（下の「更新を確認」でも確認できる）
 
 ## 構成
 ```
@@ -25,6 +26,7 @@ index.html            トップページ（ツール選択）
 assets/base.css       全ページ共通の色・リセット
 assets/home.css       トップページ用
 assets/pwa.js         オフライン対応（Service Worker の登録）
+assets/update.js      トップページのアップデートボタン・版の表示
 assets/mobile.*       スマホ対策（ダブルタップ拡大・長押し選択などを止める）
 sw.js, manifest.webmanifest  オフライン対応・ホーム画面に追加
 tools/<ツール名>/     ツールごとのフォルダ（index.html / CSS / js/ / README.md）

@@ -20,6 +20,11 @@
     <p>Terraria を遊ぶときに使う、自分用の小さなツール集です。</p>
   </header>
 
+  <div class="update" id="update" role="status" hidden>
+    <p><strong>新しいバージョンがあります</strong><span>アップデートすると最新の機能になります。描いた作品は消えません。</span></p>
+    <button type="button" class="update-btn" id="updateBtn">アップデート</button>
+  </div>
+
   <main>
     <ul class="tools" aria-label="ツール一覧">
       <li>
@@ -47,9 +52,11 @@
     <p>すべてのツールはブラウザの中だけで動作し、入力した内容や画像を外部に送信しません。作業内容はこの端末のブラウザにのみ保存されます。</p>
     <p>非公式のファンメイドツールであり、Re-Logic とは関係ありません。Terraria は Re-Logic の商標です。</p>
     <p><a href="https://github.com/saikinoBOT72/teratool1">ソースコード（MIT License）</a></p>
+    <p class="ver"><span id="appVersion"></span><button type="button" class="link-btn" id="checkUpdate">更新を確認</button><span id="updateMsg"></span></p>
   </footer>
 </div>
 <script type="module" src="assets/pwa.js"></script>
+<script type="module" src="assets/update.js"></script>
 <script type="module" src="assets/mobile.js"></script>
 </body>
 </html>

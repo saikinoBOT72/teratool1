@@ -51,6 +51,8 @@ export const IMPORT_BODY = `
     <label for="impHue">色相 <output id="impHueV">0</output><input type="range" id="impHue" min="-180" max="180" value="0"></label>
   </div>
   <div><button class="btn small" type="button" id="impColorReset">色の調整を元に戻す</button></div>
+  <p class="hint" id="impWallInfo"></p>
+  <label class="chk" for="impAllWalls"><input type="checkbox" id="impAllWalls">光オン・オフ、ダイヤ・ダイヤ以外を混ぜて、一番近い色を探す</label>
   <details class="allowed">
     <summary>使うペンキを選ぶ（<span id="impAllowedCount"></span>）</summary>
     <div class="chips" id="impPresets">
@@ -66,7 +68,7 @@ export const IMPORT_BODY = `
 <section>
   <h3>5. 仕上げ</h3>
   <label class="chk" for="impSpeck"><input type="checkbox" id="impSpeck">1マスだけのゴミを取る（まわりと違う色の1マスを、まわりの色に）</label>
-  <div class="row"><label for="impOutline">ふち取り<select id="impOutline"><option value="0">なし</option></select></label></div>
+  <div class="row"><label for="impOutline">ふち取り（塗る壁の色）<select id="impOutline"><option value="0">なし</option></select></label></div>
   <div class="row">
     <button class="btn small" type="button" id="impFlipH" aria-pressed="false">左右反転</button>
     <button class="btn small" type="button" id="impFlipV" aria-pressed="false">上下反転</button>

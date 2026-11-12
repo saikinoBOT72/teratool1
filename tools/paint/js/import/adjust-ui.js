@@ -1,5 +1,5 @@
 // 取り込み時の編集（背景・色・使うペンキ・仕上げ）の操作と、その設定値
-import { st, NPAINT, paintName } from '../state.js';
+import { st, NPAINT, NWALL, paintName, shortName, cellValue, wallIndex, WALL_LABELS } from '../state.js';
 import { $, el } from '../util.js';
 
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
@@ -19,7 +19,8 @@ export function getOptions(photo) {
     bg: $('impBg').checked, trim: $('impTrim').checked, dither: photo && $('impDither').checked,
     bright: +$('impBright').value, contrast: +$('impContrast').value, sat: +$('impSat').value, hue: +$('impHue').value,
     allowed: [...ui.allowed].sort((a, b) => a - b),
-    clear: ui.clear, despeckle: $('impSpeck').checked, outline: +$('impOutline').value,
+    walls: $('impAllWalls').checked ? Array.from({ length: NWALL }, (_, i) => i) : [wallIndex()],
+    clear: ui.clear, despeckle: $('impSpeck').checked, outline: cellValue(+$('impOutline').value, wallIndex()),
     flipH: ui.flipH, flipV: ui.flipV, rot: ui.rot,
   };
 }
@@ -30,6 +31,7 @@ export function resetForNewImage() {
   renderClear(); renderTransform();
 }
 
+// v = マスの値（色は st.hex[v - 1]）
 function chipOf(v, label) {
   const b = el('button', 'chip pchip'); b.type = 'button';
   const c = el('i', 'chip-c'); c.style.setProperty('--c', st.hex[v - 1]); b.appendChild(c);
@@ -47,7 +49,7 @@ function renderClear() {
   const box = $('impClearList');
   box.textContent = '';
   for (const v of ui.clear) {
-    const b = chipOf(v, paintName(v) + ' を透明に ×');
+    const b = chipOf(v, shortName(v) + ' を透明に ×');
     b.addEventListener('click', () => toggleClear(v));
     box.appendChild(b);
   }
@@ -56,11 +58,11 @@ function renderClear() {
 function renderAllowed() {
   const box = $('impAllowed');
   box.textContent = '';
-  for (let v = 1; v <= NPAINT; v++) {
-    const b = chipOf(v, paintName(v));
-    b.setAttribute('aria-pressed', String(ui.allowed.has(v)));
+  for (let p = 1; p <= NPAINT; p++) {
+    const b = chipOf(cellValue(p, wallIndex()), paintName(p));
+    b.setAttribute('aria-pressed', String(ui.allowed.has(p)));
     b.addEventListener('click', () => {
-      if (ui.allowed.has(v)) { if (ui.allowed.size > 1) ui.allowed.delete(v); } else ui.allowed.add(v);
+      if (ui.allowed.has(p)) { if (ui.allowed.size > 1) ui.allowed.delete(p); } else ui.allowed.add(p);
       renderAllowed(); onChange();
     });
     box.appendChild(b);
@@ -74,8 +76,11 @@ function renderTransform() {
   $('impRot').textContent = ui.rot ? `右に回す（${ui.rot * 90}°）` : '右に回す';
 }
 
-// 色の見え方（ゲーム画面/全体マップ等）が変わったときに見本の色を合わせる
-export function refreshAdjustColors() { renderAllowed(); renderClear(); }
+// 見え方・塗る壁が変わったときに見本の色と説明を合わせる
+export function refreshAdjustColors() {
+  renderAllowed(); renderClear();
+  $('impWallInfo').textContent = `今の「塗る壁」（${WALL_LABELS[wallIndex()]}）の色で置きかえます。`;
+}
 
 export function initAdjust(cb) {
   onChange = cb;
@@ -93,7 +98,7 @@ export function initAdjust(cb) {
   });
   const sel = $('impOutline');
   for (let v = 1; v <= NPAINT; v++) { const o = el('option', null, paintName(v)); o.value = v; sel.appendChild(o); }
-  ['impBg', 'impTrim', 'impSpeck', 'impOutline'].forEach((id) => $(id).addEventListener('change', onChange));
+  ['impBg', 'impTrim', 'impSpeck', 'impOutline', 'impAllWalls'].forEach((id) => $(id).addEventListener('change', onChange));
   $('impFlipH').addEventListener('click', () => { ui.flipH = !ui.flipH; renderTransform(); onChange(); });
   $('impFlipV').addEventListener('click', () => { ui.flipV = !ui.flipV; renderTransform(); onChange(); });
   $('impRot').addEventListener('click', () => { ui.rot = (ui.rot + 1) & 3; renderTransform(); onChange(); });
