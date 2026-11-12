@@ -20,3 +20,10 @@ img { -webkit-user-drag: none; }
 img.savable { -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; -webkit-user-drag: auto; }
 /* iOS は 16px 未満の入力欄にフォーカスすると画面を拡大するため */
 input[type="text"], input[type="number"], select, textarea { font-size: max(16px, 1em); }
+/* iPhone のホーム画面アプリ: ステータスバーは透過（black-translucent）にして中身を下へずらし、
+   iOS がステータスバーの下に重ねるぼかしに画面の上端が入らないようにする。
+   ステータスバーの裏は濃い色で埋めて白い文字（時刻など）を読めるようにする。ふつうのブラウザでは高さ 0 */
+body::before {
+  content: ""; position: fixed; z-index: 1000; top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0px); background: #172026; pointer-events: none;
+}

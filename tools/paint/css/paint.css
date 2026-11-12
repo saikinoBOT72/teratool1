@@ -31,7 +31,7 @@ body {
   font-family: var(--font);
   font-size: 14px;
   line-height: 1.5;
-  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  padding-top: calc(8px + env(safe-area-inset-top, 0px)); /* iPhone のアプリ表示でステータスバーのぼかしに重ならないように */
   padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
