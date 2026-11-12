@@ -1,4 +1,5 @@
-// 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を列番号つきで表示する
+// 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を列番号つきで表示する。
+// 「まとめて」モードでは、つながった同じ色のかたまりごとに案内する（pieces.js / piece-panel.js）
 import { st, valueName, paintAbbr, paintOf } from '../state.js';
 import { blockIcon } from './block.js';
 import { $, clamp, el } from '../util.js';
@@ -8,6 +9,8 @@ import { updateCursor } from '../palette.js';
 import { scheduleSave } from '../works/store.js';
 import { closePops } from '../popups.js';
 import { refreshSelPanel } from '../select/panel.js';
+import { pieces, pieceAt, drawPieces } from './pieces.js';
+import { renderPiecePanel, ensurePieceVisible } from './piece-panel.js';
 
 // 行 y の並び。末尾の空白は省く
 export function rowRuns(y) {
@@ -27,7 +30,13 @@ export function rowRuns(y) {
 // 作る順の番号（1始まり）
 const orderNo = (y) => (st.naviFromBottom ? st.H - y : y + 1);
 
+const pieceMode = () => st.naviMode === 'piece';
+
 function renderPanel() {
+  for (const b of document.querySelectorAll('#naviModes [data-nm]')) b.setAttribute('aria-pressed', String(b.dataset.nm === st.naviMode));
+  $('naviPrev').textContent = pieceMode() ? '前のかたまり' : '前の行';
+  $('naviNext').textContent = pieceMode() ? '次のかたまり' : '次の行';
+  if (pieceMode()) { renderPiecePanel(); return; }
   const y = st.navRow;
   $('naviRow').textContent = `${st.naviFromBottom ? '下' : '上'}から ${orderNo(y)}行目 / ${st.H}`;
   $('naviDir').textContent = '順番: ' + (st.naviFromBottom ? '下から' : '上から');
@@ -59,17 +68,25 @@ function ensureVisible() {
   if (top < 0 || top + v.s > ch) { v.y = Math.round(ch / 2 - (st.navRow + 0.5) * v.s); st.autoFit = false; }
 }
 
-function update() { renderPanel(); ensureVisible(); schedule(); scheduleSave(); }
+function update() { renderPanel(); if (pieceMode()) ensurePieceVisible(); else ensureVisible(); schedule(); scheduleSave(); }
 
 // d = +1 で作る順の次の行へ
 export function step(d) {
+  if (pieceMode()) { st.pieceIdx = clamp(st.pieceIdx + d, 0, Math.max(0, pieces().list.length - 1)); update(); return; }
   const dir = st.naviFromBottom ? -1 : 1;
   st.navRow = clamp(st.navRow + d * dir, 0, st.H - 1);
   update();
 }
 
-export function selectRow(c) {
+// キャンバスを押した（drag = なぞっている途中）。1行ずつなら行を、まとめてならそのマスのかたまりを選ぶ
+export function selectRow(c, drag) {
   if (!c) return;
+  if (pieceMode()) {
+    const k = pieceAt(c);
+    if (k >= 0 && k !== st.pieceIdx) { st.pieceIdx = k; renderPanel(); schedule(); }
+    return;
+  }
+  if (drag && c.y === st.navRow) return;
   st.navRow = c.y; st.lastCell = c; updateReadout(); update();
 }
 
@@ -93,9 +110,10 @@ export function exitNavi() {
   updateCursor(); refreshSelPanel(); refit();
 }
 
-// キャンバス上の表示: 今の行を枠で囲み、他の行は薄く
+// キャンバス上の表示: 今の行を枠で囲み、他の行は薄く（まとめてなら今のかたまりを囲む）
 function overlay(ctx) {
   if (st.mode !== 'navi') return;
+  if (pieceMode()) { drawPieces(ctx); return; }
   const v = st.view, w = st.W * v.s;
   for (let y = 0; y < st.H; y++) {
     if (y === st.navRow) continue;
@@ -114,7 +132,13 @@ export function initNavi() {
   $('naviPrev').addEventListener('click', () => step(-1));
   $('naviNext').addEventListener('click', () => step(1));
   $('naviDir').addEventListener('click', () => {
-    st.naviFromBottom = !st.naviFromBottom;
+    if (pieceMode()) { st.pieceOrder = st.pieceOrder === 'size' ? 'color' : 'size'; st.pieceIdx = 0; } else st.naviFromBottom = !st.naviFromBottom;
     update();
+  });
+  $('naviModes').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-nm]');
+    if (!b || b.dataset.nm === st.naviMode) return;
+    st.naviMode = b.dataset.nm;
+    update(); refit(); // 下の欄の高さが変わる
   });
 }

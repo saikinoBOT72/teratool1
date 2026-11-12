@@ -110,7 +110,7 @@ export function saveCurrent() {
 export function saveSettings() {
   write(K_SETTINGS, {
     v: 4, grid: st.showGrid, major: st.showMajor, wall: st.showWall, sel: st.sel, recent: st.recent, mirror: st.mirror,
-    fromBottom: st.naviFromBottom, colorMode: st.colorMode, current: st.workId,
+    fromBottom: st.naviFromBottom, naviMode: st.naviMode, pieceOrder: st.pieceOrder, colorMode: st.colorMode, current: st.workId,
   });
 }
 
@@ -130,6 +130,8 @@ function applySettings(o) {
   if (o.colorMode === 'world' || o.colorMode === 'map') st.colorMode = o.colorMode;
   if (typeof o.mirror === 'boolean') st.mirror = o.mirror;
   if (typeof o.fromBottom === 'boolean') st.naviFromBottom = o.fromBottom;
+  if (o.naviMode === 'row' || o.naviMode === 'piece') st.naviMode = o.naviMode;
+  if (o.pieceOrder === 'size' || o.pieceOrder === 'color') st.pieceOrder = o.pieceOrder;
 }
 
 // 旧形式（1枚だけ保存していた v1）を「作品 1」として引き継ぐ

@@ -40,6 +40,9 @@ export const st = {
   mode: 'edit',            // 'edit' | 'navi'
   navRow: 0,               // いま見ている行（0 = 一番上）
   naviFromBottom: true,    // 下の行から作る
+  naviMode: 'row',         // 'row' = 1行ずつ / 'piece' = まとめて（つながった同じ色のかたまりごと）
+  pieceOrder: 'size',      // まとめての順番: 'size' = 大きい順 / 'color' = 色ごと
+  pieceIdx: 0,             // まとめての今のかたまり
 };
 
 export function brushValue() { return st.sel; }

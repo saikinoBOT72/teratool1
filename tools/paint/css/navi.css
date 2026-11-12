@@ -26,3 +26,12 @@
 
 .navi-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 .navi-actions .btn { padding: 0 8px; }
+
+/* まとめて: 今のかたまり（大きめに）と、形・場所・同じ色の何個目か */
+.run.piece { padding: 6px 12px 6px 6px; font-size: 16px; gap: 8px; }
+.run.piece i { width: 32px; height: 32px; }
+.run.piece .block-icon { width: 30px; height: 30px; }
+.run.piece b { font-size: 18px; }
+.piece-info { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; width: 100%; font-size: 13px; color: var(--muted); }
+.piece-info .tag { padding: 1px 8px; border-radius: 6px; background: var(--accent); color: var(--accent-fg); font-weight: 700; }
+#naviModes button { min-height: 34px; }

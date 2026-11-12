@@ -125,8 +125,14 @@
 
     <div class="navi-panel" id="naviPanel" hidden>
       <div class="navi-head">
-        <strong id="naviRow"></strong>
+        <div class="segs" id="naviModes" role="group" aria-label="案内のしかた">
+          <button type="button" data-nm="row">1行ずつ</button>
+          <button type="button" data-nm="piece" title="つながった同じ色をかたまりごとにまとめて作る">まとめて</button>
+        </div>
         <button class="opt" type="button" id="naviDir"></button>
+      </div>
+      <div class="navi-head">
+        <strong id="naviRow"></strong>
       </div>
       <ol class="runs" id="naviRuns" aria-live="polite"></ol>
       <div class="navi-actions">

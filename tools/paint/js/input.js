@@ -72,7 +72,7 @@ function onMove(e) {
   if (mode === 'gesture') doGesture();
   else if (mode === 'pan' && panLast) { panBy(p.x - panLast.x, p.y - panLast.y); panLast = p; }
   else if (mode === 'draw') continueStroke(p);
-  else if (mode === 'navi' && c && c.y !== st.navRow) selectRow(c); // なぞって行を選ぶ
+  else if (mode === 'navi' && c) selectRow(c, true); // なぞって行を選ぶ
 }
 
 function onUp(e) {
@@ -95,7 +95,10 @@ const KEY_TOOLS = { b: 'pen', f: 'fill', i: 'pick', h: 'pan', l: 'line', r: 'rec
 
 // 建築ナビ中のキー: ↑↓ で行を移動、N で編集に戻る
 function naviKey(e, k) {
-  if (k === 'arrowup' || k === 'arrowdown') {
+  if (st.naviMode === 'piece' && ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) {
+    e.preventDefault();
+    step(k === 'arrowdown' || k === 'arrowright' ? 1 : -1); // まとめて: ↓→ で次のかたまり
+  } else if (k === 'arrowup' || k === 'arrowdown') {
     e.preventDefault();
     step((k === 'arrowup') === st.naviFromBottom ? 1 : -1);
   } else if (k === 'n') exitNavi();
