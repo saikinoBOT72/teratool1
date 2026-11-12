@@ -51,6 +51,8 @@ export function refreshRgb() {
 }
 
 export function paintName(p) { return p ? PAINTS[p - 1] : '透過'; }
+// 略した名前（濃い赤 → 濃赤、灰色 → 灰）。建築ナビの並びなど狭いところ用
+export function paintAbbr(p) { return paintName(p).replace('濃い', '濃').replace('灰色', '灰'); }
 // 「濃い赤 ◆ON」のような短い名前と、「濃い赤（ダイヤ・光オン）」のような名前
 export function shortName(v) { return paintName(paintOf(v)) + (v ? ' ' + WALL_SHORT[wallOf(v)] : ''); }
 export function valueName(v) { return v ? `${paintName(paintOf(v))}（${WALL_LABELS[wallOf(v)]}）` : '透過'; }

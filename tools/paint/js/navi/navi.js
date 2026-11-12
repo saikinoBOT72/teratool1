@@ -1,5 +1,5 @@
 // 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を列番号つきで表示する
-import { st, valueName } from '../state.js';
+import { st, valueName, paintAbbr, paintOf } from '../state.js';
 import { wallBadge } from '../wallmark.js';
 import { $, clamp, el } from '../util.js';
 import { addOverlay, schedule, stage } from '../render.js';
@@ -44,6 +44,7 @@ function renderPanel() {
       const sw = el('i'); sw.style.setProperty('--c', st.hex[r.v - 1]); li.appendChild(sw);
       li.title = valueName(r.v);
     }
+    if (r.v) li.appendChild(el('span', 'nm', paintAbbr(paintOf(r.v))));
     li.appendChild(el('b', null, (r.v ? '' : '空 ') + '×' + r.n));
     if (r.v) li.appendChild(wallBadge(r.v)); // ◆ ON/OFF の印
     li.appendChild(el('small', null, pos));
