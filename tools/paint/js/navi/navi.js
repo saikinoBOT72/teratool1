@@ -6,6 +6,7 @@ import { updateReadout, fit } from '../view.js';
 import { updateCursor } from '../palette.js';
 import { scheduleSave } from '../works/store.js';
 import { closePops } from '../popups.js';
+import { refreshSelPanel } from '../select/panel.js';
 
 // 行 y の並び。末尾の空白は省く
 export function rowRuns(y) {
@@ -78,7 +79,7 @@ export function enterNavi() {
   st.mode = 'navi'; st.hover = null;
   st.navRow = clamp(st.navRow, 0, st.H - 1);
   $('editPanel').hidden = true; $('naviPanel').hidden = false;
-  updateCursor(); renderPanel(); refit();
+  updateCursor(); renderPanel(); refreshSelPanel(); refit();
 }
 
 // 下の欄の高さが変わるので、全体が見えるように表示し直す
@@ -87,7 +88,7 @@ function refit() { st.autoFit = true; requestAnimationFrame(() => fit()); }
 export function exitNavi() {
   st.mode = 'edit';
   $('naviPanel').hidden = true; $('editPanel').hidden = false;
-  updateCursor(); refit();
+  updateCursor(); refreshSelPanel(); refit();
 }
 
 // キャンバス上の表示: 今の行を枠で囲み、他の行は薄く

@@ -5,10 +5,11 @@ import { $, el } from './util.js';
 import { cv, markDirty, schedule } from './render.js';
 import { scheduleSave } from './works/store.js';
 import { closePops } from './popups.js';
+import { refreshSelPanel } from './select/panel.js';
 
 const RECENT_MAX = 12;
 const swatches = []; // { b, v, n }（n = マス数の表示）
-const TOOL_NAMES = { pen: 'ペン', fill: '塗りつぶし', pick: 'スポイト', pan: '移動', line: '直線', rect: '四角', ellipse: '円' };
+const TOOL_NAMES = { pen: 'ペン', fill: '塗りつぶし', pick: 'スポイト', pan: '移動', line: '直線', rect: '四角', rectFill: '塗り四角', ellipse: '円', select: '選択' };
 
 export function updateCursor() {
   cv.style.cursor = (st.mode === 'navi') ? 'pointer' : (st.tool === 'pan' || st.spaceDown) ? 'grab' : 'crosshair';
@@ -20,7 +21,7 @@ export function setTool(t) {
   const svg = document.querySelector(`.tool[data-tool="${t}"] svg`);
   $('toolIcon').replaceChildren(svg ? svg.cloneNode(true) : '');
   $('toolName').textContent = TOOL_NAMES[t] || t;
-  updateCursor();
+  updateCursor(); refreshSelPanel();
 }
 
 export function setMirror(on) {
@@ -46,7 +47,7 @@ export function setSel(v) {
   st.sel = v;
   if (v) { st.recent = [v, ...st.recent.filter((x) => x !== v)].slice(0, RECENT_MAX); renderRecent(); }
   refreshSel();
-  if (st.tool === 'pan' || st.tool === 'pick') setTool('pen');
+  if (st.tool === 'pan' || st.tool === 'pick' || st.tool === 'select') setTool('pen');
   scheduleSave();
 }
 export const pickValue = setSel;

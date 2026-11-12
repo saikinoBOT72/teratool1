@@ -12,6 +12,8 @@ import { popOpen, closePops } from './popups.js';
 import { setSel } from './palette.js';
 import { toggleColorMode } from './colorset.js';
 import { onColorsChanged } from './colors-changed.js';
+import { hasSel, clearSel, invertSel } from './select/mask.js';
+import { selectAll, fillSel } from './select/panel.js';
 
 const pointers = new Map();
 let mode = null;   // 'draw' | 'pan' | 'gesture' | 'none' | null
@@ -57,7 +59,7 @@ function onDown(e) {
   if (mouse && e.button !== 0) return;
   if (st.spaceDown || (st.tool === 'pan' && st.mode === 'edit')) { startPan(p); return; }
   if (st.mode === 'navi') { mode = 'navi'; selectRow(cellAt(p.x, p.y)); return; }
-  mode = 'draw'; beginAction(p);
+  mode = 'draw'; beginAction(p, e);
 }
 
 function onMove(e) {
@@ -88,7 +90,7 @@ function onUp(e) {
   schedule();
 }
 
-const KEY_TOOLS = { b: 'pen', f: 'fill', i: 'pick', h: 'pan', l: 'line', r: 'rect', o: 'ellipse' };
+const KEY_TOOLS = { b: 'pen', f: 'fill', i: 'pick', h: 'pan', l: 'line', r: 'rect', o: 'ellipse', s: 'select' };
 
 // 建築ナビ中のキー: ↑↓ で行を移動、N で編集に戻る
 function naviKey(e, k) {
@@ -102,18 +104,36 @@ function naviKey(e, k) {
   else if (k === '-') zoomCenter(-1);
 }
 
+// 選択のキー: Ctrl+A 全部 / Ctrl+D 解除 / Ctrl+Shift+I 反転 / Delete 選択したマスを消す
+function selKey(e, k, mod) {
+  if (sheetOpen() || st.mode !== 'edit') return false;
+  let f = null;
+  if (mod && !e.shiftKey && k === 'a') f = selectAll;
+  else if (mod && k === 'd') f = clearSel;
+  else if (mod && e.shiftKey && k === 'i') f = invertSel;
+  else if (!mod && (k === 'delete' || k === 'backspace') && hasSel()) f = () => fillSel(0);
+  if (!f) return false;
+  e.preventDefault(); f();
+  return true;
+}
+
 function onKeyDown(e) {
   const tag = e.target && e.target.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  if (e.key === 'Escape') { closePops(); closeSheet(); return; }
   const k = e.key.toLowerCase();
   const mod = e.ctrlKey || e.metaKey;
+  if (e.key === 'Escape') {
+    if (popOpen() || sheetOpen()) { closePops(); closeSheet(); } else clearSel(); // 何も開いていなければ選択を解除
+    return;
+  }
+  if (selKey(e, k, mod)) return;
   if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
   if (mod && k === 'y') { e.preventDefault(); redo(); return; }
   if (mod || e.altKey || sheetOpen()) return;
   if (k === ' ' && tag !== 'BUTTON') { e.preventDefault(); st.spaceDown = true; updateCursor(); return; }
   if (st.mode === 'navi') { naviKey(e, k); return; }
-  if (KEY_TOOLS[k]) setTool(KEY_TOOLS[k]);
+  if (k === 'r' && e.shiftKey) setTool('rectFill');
+  else if (KEY_TOOLS[k]) setTool(KEY_TOOLS[k]);
   else if (k === 'm') setMirror(!st.mirror);
   else if (k === 'e') setSel(0); // E = 透過（消す）
   else if (k === 'v') toggleColorMode(onColorsChanged);

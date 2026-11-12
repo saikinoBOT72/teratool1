@@ -60,6 +60,34 @@
   </main>
 
   <section class="dock" aria-label="道具とペンキ">
+    <div class="sel-panel" id="selPanel" hidden>
+      <div class="sel-head">
+        <span id="selInfo"></span>
+        <button class="btn small" type="button" id="selFill" title="選択したマスを今のペンキで塗る">塗る</button>
+        <button class="btn small" type="button" id="selErase" title="選択したマスを消す (Delete)">消す</button>
+        <button class="btn small" type="button" id="selClear" title="選択を解除 (Esc)">解除</button>
+      </div>
+      <div class="sel-full" id="selFull">
+        <div class="sel-row">
+          <div class="segs" id="selModes" role="group" aria-label="選び方">
+            <button type="button" data-mode="rect" title="ドラッグした四角を選ぶ">四角</button>
+            <button type="button" data-mode="lasso" title="なぞって囲んだ内側を選ぶ">囲う</button>
+            <button type="button" data-mode="wand" title="タップしたマスとつながった同じ色を選ぶ">同じ色</button>
+            <button type="button" data-mode="color" title="タップしたマスと同じ色を全部選ぶ">同じ色(全体)</button>
+          </div>
+          <div class="segs" id="selOps" role="group" aria-label="今の選択との合わせ方">
+            <button type="button" data-op="new" title="選び直す">新しく</button>
+            <button type="button" data-op="add" title="今の選択に足す (Shift)">足す</button>
+            <button type="button" data-op="sub" title="今の選択から引く (Alt)">引く</button>
+          </div>
+        </div>
+        <div class="sel-row">
+          <button class="btn small" type="button" id="selAll" title="全部選ぶ (Ctrl+A)">全部</button>
+          <button class="btn small" type="button" id="selDrawn" title="透過でないマスを選ぶ">描いたマス</button>
+          <button class="btn small" type="button" id="selInvert" title="選択を反転 (Ctrl+Shift+I)">反転</button>
+        </div>
+      </div>
+    </div>
     <div class="bar" id="editPanel">
       <button class="bar-btn" type="button" id="btnTool" aria-expanded="false" aria-controls="toolPop" title="道具を選ぶ">
         <span class="bar-icon" id="toolIcon" aria-hidden="true"></span><span class="bar-label" id="toolName">ペン</span>
@@ -79,7 +107,9 @@
         <button class="tool" type="button" data-tool="pan" aria-pressed="false" title="移動 (H)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 6-6 6-3 0-4.5-1.5-6-4l-1.7-3a1.5 1.5 0 0 1 2.6-1.5L8 14"/></svg>移動</button>
         <button class="tool" type="button" data-tool="line" aria-pressed="false" title="直線 (L)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L19 5"/><path d="M4 18h2v2H4zM18 4h2v2h-2z"/></svg>直線</button>
         <button class="tool" type="button" data-tool="rect" aria-pressed="false" title="四角 (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v12H5z"/></svg>四角</button>
+        <button class="tool" type="button" data-tool="rectFill" aria-pressed="false" title="塗り四角 (Shift+R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v12H5z" fill="currentColor"/></svg>塗り四角</button>
         <button class="tool" type="button" data-tool="ellipse" aria-pressed="false" title="円 (O)"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg>円</button>
+        <button class="tool" type="button" data-tool="select" aria-pressed="false" title="選択 (S)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z" stroke-dasharray="3 2.5"/><path d="M9 9h6v6H9z" fill="currentColor" stroke="none"/></svg>選択</button>
       </div>
     </div>
 

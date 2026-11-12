@@ -15,6 +15,7 @@ import { initMenu } from './menu.js';
 import { initNavi } from './navi/navi.js';
 import { initWorks } from './works/sheet.js';
 import { initImporter } from './import/index.js';
+import { initSelect } from './select/panel.js';
 
 boot();
 refreshRgb();
@@ -43,6 +44,7 @@ initMenu();
 initNavi();
 initWorks();
 initImporter();
+initSelect();
 
 // テーマ（ライト/ダーク）が変わったら描き直す
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', schedule); } catch (_) { /* old browsers */ }

@@ -58,3 +58,14 @@
 .segs { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
 .segs button { border: 0; background: none; min-height: 36px; padding: 0 10px; font-size: 13px; font-weight: 500; }
 .segs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+
+/* 選択の操作パネル（バーの上） */
+.sel-panel { display: grid; gap: 6px; margin-bottom: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.sel-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sel-head #selInfo { flex: 1; min-width: 0; }
+.sel-head .btn.small { flex-shrink: 0; min-height: 34px; padding: 0 10px; }
+.sel-full { display: grid; gap: 6px; }
+.sel-full[hidden] { display: none; }
+.sel-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.sel-row .segs button { min-height: 34px; padding: 0 9px; }
+.sel-row .btn.small { min-height: 34px; padding: 0 10px; }

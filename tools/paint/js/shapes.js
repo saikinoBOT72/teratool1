@@ -21,6 +21,13 @@ export function plotRect(x0, y0, x1, y1, plot) {
   for (let y = ya + 1; y < yb; y++) { plot(xa, y); plot(xb, y); }
 }
 
+// 塗りつぶした四角
+export function plotRectFill(x0, y0, x1, y1, plot) {
+  for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
+    for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) plot(x, y);
+  }
+}
+
 // 2点を対角とする四角に内接する楕円の枠（偶数・奇数どちらの幅でも左右上下対称になる）
 export function plotEllipse(x0, y0, x1, y1, plot) {
   const xa = Math.min(x0, x1), xb = Math.max(x0, x1), ya = Math.min(y0, y1), yb = Math.max(y0, y1);
