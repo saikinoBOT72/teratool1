@@ -1,6 +1,7 @@
 // 道具の切り替え・色の一覧・下のバーの表示・集計
 //   色の一覧: 透過 / 最近使った色 / 壁ごと（ダイヤ以外・光オフ …）に28色ずつ。どの色も直接選ぶ
-import { st, NPAINT, refreshRgb, shortName, valueName, cellValue, WALL_LABELS } from './state.js';
+import { st, NPAINT, refreshRgb, paintName, paintOf, valueName, cellValue, WALL_LABELS, WALL_ORDER } from './state.js';
+import { wallBadge } from './wallmark.js';
 import { $, el } from './util.js';
 import { cv, markDirty, schedule } from './render.js';
 import { scheduleSave } from './works/store.js';
@@ -37,7 +38,8 @@ function paintChip(node, v) {
 
 export function refreshSel() {
   for (const s of swatches) s.b.setAttribute('aria-pressed', String(s.v === st.sel));
-  $('selName').textContent = shortName(st.sel);
+  $('selName').textContent = paintName(paintOf(st.sel));
+  $('colorChip').replaceChildren(...(st.sel ? [wallBadge(st.sel, 'mini')] : [])); // 色見本の上に ◆ ON/OFF
   $('selName2').textContent = '選択中：' + valueName(st.sel);
   paintChip($('colorChip'), st.sel);
 }
@@ -55,6 +57,7 @@ export const pickValue = setSel;
 function swatch(v, withCount) {
   const b = el('button', 'sw'); b.type = 'button'; b.title = valueName(v);
   paintChip(b, v);
+  if (v) b.appendChild(wallBadge(v, 'mini'));
   const n = el('span', 'n'); if (withCount) b.appendChild(n);
   b.addEventListener('click', () => { setSel(v); closePops(); });
   const s = { b, v, n: withCount ? n : null };
@@ -62,9 +65,11 @@ function swatch(v, withCount) {
   return b;
 }
 
-function group(title, cls) {
+function group(title, cls, v) {
   const g = el('div', 'pal-group');
-  g.appendChild(el('h4', null, title));
+  const h = g.appendChild(el('h4', null));
+  if (v) h.appendChild(wallBadge(v));
+  h.appendChild(document.createTextNode(title));
   const row = el('div', 'pal-row ' + (cls || ''));
   g.appendChild(row);
   return [g, row];
@@ -88,9 +93,9 @@ export function buildPalette() {
   box.appendChild(g0);
   const [gr, rr] = group('最近使った色');
   recentRow = rr; box.appendChild(gr);
-  // 壁の順: ダイヤ以外・光オフ → ダイヤ以外・光オン → ダイヤ・光オフ → ダイヤ・光オン
-  for (const wall of [0, 2, 1, 3]) {
-    const [g, row] = group(WALL_LABELS[wall], 'paints');
+  // 壁の順: ダイヤ・光オン → ダイヤ・光オフ → ダイヤ以外・光オン → ダイヤ以外・光オフ
+  for (const wall of WALL_ORDER) {
+    const [g, row] = group(WALL_LABELS[wall], 'paints', cellValue(1, wall));
     for (let p = 1; p <= NPAINT; p++) row.appendChild(swatch(cellValue(p, wall), true));
     box.appendChild(g);
   }

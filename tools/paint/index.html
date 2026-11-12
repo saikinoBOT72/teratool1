@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/navi.css">
 <link rel="stylesheet" href="css/works.css">
 <link rel="stylesheet" href="css/import.css">
+<link rel="stylesheet" href="css/wallmark.css">
 </head>
 <body>
 <div class="app">
@@ -42,6 +43,9 @@
       </button>
       <button class="ib" id="btnGrid" type="button" aria-label="グリッド表示" aria-pressed="true" title="グリッド (G)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 12h16M12 4v16"/></svg>
+      </button>
+      <button class="ib" id="btnWall" type="button" aria-label="壁の種類を表示" aria-pressed="false" title="壁の種類を表示 (D)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 9-7 9-7-9z" fill="currentColor" stroke="none" opacity="0.9"/></svg>
       </button>
       <button class="ib" id="btnMenu" type="button" aria-label="メニュー" title="メニュー">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -186,6 +190,8 @@
     <section>
       <h3>表示</h3>
       <label class="chk" for="chkMajor"><input type="checkbox" id="chkMajor" checked>10マスごとに濃い線を入れる</label>
+      <label class="chk" for="chkWall"><input type="checkbox" id="chkWall">マスに壁の種類を表示する（◆ ダイヤ / ◇× ダイヤ以外、ON / OFF）</label>
+      <p class="hint">拡大したときに表示されます（小さいときは ◆ だけ）。上の ◆ ボタンか D キーでも切り替えられます。</p>
     </section>
     <section>
       <h3>色の見え方</h3>

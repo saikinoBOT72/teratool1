@@ -11,7 +11,7 @@ import { initPops, closePops } from './popups.js';
 import { buildColorControls } from './colorset.js';
 import { onColorsChanged } from './colors-changed.js';
 import { initInput } from './input.js';
-import { initMenu } from './menu.js';
+import { initMenu, setShowWall } from './menu.js';
 import { initNavi } from './navi/navi.js';
 import { initWorks } from './works/sheet.js';
 import { initImporter } from './import/index.js';
@@ -23,6 +23,8 @@ buildPalette();
 buildColorControls($('colorControls'), onColorsChanged);
 $('btnGrid').setAttribute('aria-pressed', String(st.showGrid));
 $('chkMajor').checked = st.showMajor;
+$('chkWall').checked = st.showWall;
+$('btnWall').setAttribute('aria-pressed', String(st.showWall));
 $('btnMirror').setAttribute('aria-pressed', String(st.mirror));
 setTool('pen');
 updateSizeUI();
@@ -30,6 +32,7 @@ updateHist();
 
 // 上部バー・ズーム・道具ボタン
 $('btnGrid').addEventListener('click', toggleGrid);
+$('btnWall').addEventListener('click', () => setShowWall(!st.showWall));
 $('btnUndo').addEventListener('click', undo);
 $('btnRedo').addEventListener('click', redo);
 $('zIn').addEventListener('click', () => zoomCenter(1));

@@ -61,6 +61,14 @@ export function initMenu() {
     closeSheet(); toast('全部消しました（元に戻せます）');
   });
   $('chkMajor').addEventListener('change', () => { st.showMajor = $('chkMajor').checked; schedule(); scheduleSave(); });
+  $('chkWall').addEventListener('change', () => setShowWall($('chkWall').checked));
   buildColorControls($('menuColorControls'), onColorsChanged);
   $('btnExport').addEventListener('click', exportPng);
+}
+
+// キャンバスの壁の印（◆ ON/OFF）の表示切り替え（メニューと D キー）
+export function setShowWall(on) {
+  st.showWall = on; $('chkWall').checked = on;
+  $('btnWall').setAttribute('aria-pressed', String(on));
+  schedule(); scheduleSave();
 }

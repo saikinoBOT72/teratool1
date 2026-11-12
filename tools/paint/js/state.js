@@ -16,7 +16,9 @@ export const cellValue = (paint, wall) => (paint ? wall * NPAINT + paint : 0);
 export const paintOf = (v) => (v ? (v - 1) % NPAINT + 1 : 0);
 export const wallOf = (v) => (v ? Math.floor((v - 1) / NPAINT) : 0);
 export const WALL_LABELS = ['ダイヤ以外・光オフ', 'ダイヤ・光オフ', 'ダイヤ以外・光オン', 'ダイヤ・光オン'];
-const WALL_SHORT = ['', 'ダイヤ', '光', 'ダイヤ光'];
+const WALL_SHORT = ['◇OFF', '◆OFF', '◇ON', '◆ON']; // ◆ = ダイヤ、◇ = ダイヤ以外、ON/OFF = 光
+// 一覧に並べる壁の順（基本のダイヤ・光オンを先頭に）
+export const WALL_ORDER = [3, 1, 2, 0];
 
 export const st = {
   // 作品
@@ -26,10 +28,11 @@ export const st = {
   colorMode: 'world',      // 'world' = ゲーム画面 / 'map' = 全体マップ
   rgbs: [], hex: [],       // マスの値ごとの今の色（rgbs[値 - 1]、112個）
   // これから塗る値（0 = 透過）と、最近使った値
-  sel: 13, recent: [],
+  sel: 3 * 28 + 13, recent: [], // 最初は濃い赤（ダイヤ・光オン）
   tool: 'pen', mirror: false,
   // 表示
   showGrid: true, showMajor: true,
+  showWall: false,         // キャンバスのマスに壁の種類の印（◆ ON/OFF）を出す
   view: { x: 0, y: 0, s: 12 }, autoFit: true,
   hover: null, lastCell: null, spaceDown: false,
   dirty: true,
@@ -48,6 +51,6 @@ export function refreshRgb() {
 }
 
 export function paintName(p) { return p ? PAINTS[p - 1] : '透過'; }
-// 「濃い赤・ダイヤ光」のような短い名前と、「濃い赤（ダイヤ・光オン）」のような名前
-export function shortName(v) { const s = WALL_SHORT[wallOf(v)]; return paintName(paintOf(v)) + (v && s ? '・' + s : ''); }
+// 「濃い赤 ◆ON」のような短い名前と、「濃い赤（ダイヤ・光オン）」のような名前
+export function shortName(v) { return paintName(paintOf(v)) + (v ? ' ' + WALL_SHORT[wallOf(v)] : ''); }
 export function valueName(v) { return v ? `${paintName(paintOf(v))}（${WALL_LABELS[wallOf(v)]}）` : '透過'; }

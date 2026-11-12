@@ -1,6 +1,7 @@
 // 取り込み時の編集（背景・色・使う色のオプション・仕上げ）の操作と、その設定値
 // 使う色は基本は全部（28色 × 壁4種）。オプションで壁の種類・ペンキをしぼれる
-import { st, NPAINT, NWALL, paintName, shortName, valueName, cellValue, WALL_LABELS } from '../state.js';
+import { st, NPAINT, NWALL, paintName, shortName, valueName, cellValue, WALL_LABELS, WALL_ORDER } from '../state.js';
+import { wallBadge } from '../wallmark.js';
 import { $, el } from '../util.js';
 
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
@@ -10,7 +11,6 @@ const PRESETS = {
   normal: [...range(1, 12), ...OTHERS],
   deep: [...range(13, 24), ...OTHERS],
 };
-const WALL_ORDER = [0, 2, 1, 3];
 const SLIDERS = ['impBright', 'impContrast', 'impSat', 'impHue'];
 const ui = { allowed: new Set(PRESETS.all), walls: new Set(range(0, NWALL - 1)), clear: new Set(), flipH: false, flipV: false, rot: 0 };
 let onChange = () => {};
@@ -78,6 +78,7 @@ function renderWalls() {
   box.textContent = '';
   for (const w of WALL_ORDER) {
     const b = chipOf(cellValue(13, w), WALL_LABELS[w]); // 見本は濃い赤
+    b.insertBefore(wallBadge(cellValue(13, w)), b.lastChild);
     b.setAttribute('aria-pressed', String(ui.walls.has(w)));
     b.addEventListener('click', () => {
       if (ui.walls.has(w)) { if (ui.walls.size > 1) ui.walls.delete(w); } else ui.walls.add(w);

@@ -109,7 +109,7 @@ export function saveCurrent() {
 
 export function saveSettings() {
   write(K_SETTINGS, {
-    v: 4, grid: st.showGrid, major: st.showMajor, sel: st.sel, recent: st.recent, mirror: st.mirror,
+    v: 4, grid: st.showGrid, major: st.showMajor, wall: st.showWall, sel: st.sel, recent: st.recent, mirror: st.mirror,
     fromBottom: st.naviFromBottom, colorMode: st.colorMode, current: st.workId,
   });
 }
@@ -122,6 +122,7 @@ function applySettings(o) {
   if (!o) return;
   if (typeof o.grid === 'boolean') st.showGrid = o.grid;
   if (typeof o.major === 'boolean') st.showMajor = o.major;
+  if (typeof o.wall === 'boolean') st.showWall = o.wall;
   if (!(o.v >= 4)) oldWall = legacyWall(o);
   const sel = convertSel(o);
   if (sel !== null) st.sel = sel;

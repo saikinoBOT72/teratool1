@@ -1,5 +1,6 @@
 // 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を列番号つきで表示する
-import { st, shortName, valueName, wallOf } from '../state.js';
+import { st, valueName } from '../state.js';
+import { wallBadge } from '../wallmark.js';
 import { $, clamp, el } from '../util.js';
 import { addOverlay, schedule, stage } from '../render.js';
 import { updateReadout, fit } from '../view.js';
@@ -44,7 +45,7 @@ function renderPanel() {
       li.title = valueName(r.v);
     }
     li.appendChild(el('b', null, (r.v ? '' : '空 ') + '×' + r.n));
-    if (r.v && wallOf(r.v)) li.appendChild(el('em', null, shortName(r.v).split('・')[1])); // ダイヤ・光の印
+    if (r.v) li.appendChild(wallBadge(r.v)); // ◆ ON/OFF の印
     li.appendChild(el('small', null, pos));
     li.setAttribute('aria-label', `${r.v ? valueName(r.v) : '空き'} ${r.n}マス（${pos}列目）`);
     list.appendChild(li);

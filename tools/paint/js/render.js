@@ -1,6 +1,7 @@
 // キャンバスへの描画（絵・市松模様の背景・グリッド・カーソル）
 import { st } from './state.js';
 import { updateCounts } from './palette.js';
+import { drawWallMarks } from './wallmark.js';
 
 export const cv = document.getElementById('cv');
 export const stage = document.getElementById('stage');
@@ -110,6 +111,7 @@ function render() {
   ctx.drawImage(img, v.x, v.y, w, h);
 
   if (st.showGrid) drawGrid(cw, ch, w, h);
+  drawWallMarks(ctx, cw, ch);
   ctx.strokeStyle = cs.getPropertyValue('--outline').trim() || '#000';
   ctx.lineWidth = 1;
   ctx.strokeRect(Math.floor(v.x) - 0.5, Math.floor(v.y) - 0.5, Math.round(w) + 1, Math.round(h) + 1);

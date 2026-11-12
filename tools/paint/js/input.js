@@ -10,6 +10,7 @@ import { sheetOpen, closeSheet } from './sheet.js';
 import { enterNavi, exitNavi, selectRow, step } from './navi/navi.js';
 import { popOpen, closePops } from './popups.js';
 import { setSel } from './palette.js';
+import { setShowWall } from './menu.js';
 import { toggleColorMode } from './colorset.js';
 import { onColorsChanged } from './colors-changed.js';
 import { hasSel, clearSel, invertSel } from './select/mask.js';
@@ -100,6 +101,7 @@ function naviKey(e, k) {
   } else if (k === 'n') exitNavi();
   else if (k === 'v') toggleColorMode(onColorsChanged);
   else if (k === 'g') toggleGrid();
+  else if (k === 'd') setShowWall(!st.showWall);
   else if (k === '+' || k === '=') zoomCenter(1);
   else if (k === '-') zoomCenter(-1);
 }
@@ -139,6 +141,7 @@ function onKeyDown(e) {
   else if (k === 'v') toggleColorMode(onColorsChanged);
   else if (k === 'n') enterNavi();
   else if (k === 'g') toggleGrid();
+  else if (k === 'd') setShowWall(!st.showWall);
   else if (k === '+' || k === '=') zoomCenter(1);
   else if (k === '-') zoomCenter(-1);
 }

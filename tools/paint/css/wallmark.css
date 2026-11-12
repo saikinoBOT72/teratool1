@@ -1,0 +1,25 @@
+/* 壁の種類の印: ◆ = ダイヤ、点線の◇に× = ダイヤ以外、ON / OFF = 光（js/wallmark.js） */
+.wm {
+  display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; vertical-align: middle;
+  padding: 1px 4px 1px 2px; border-radius: 5px; background: rgba(0, 0, 0, 0.72); color: #fff;
+  font-size: 10px; font-weight: 700; line-height: 1.1; letter-spacing: 0.02em; font-style: normal;
+}
+.wm b { font-weight: 800; }
+.wm.on b { color: #ffe680; }
+.wm-d { width: 11px; height: 11px; overflow: visible; }
+.wm-fill { fill: #fff; stroke: none; }
+.wm-dash { fill: none; stroke: #fff; stroke-width: 1.1; stroke-dasharray: 1.4 1.1; }
+.wm-x { fill: none; stroke: #fff; stroke-width: 1.2; stroke-linecap: round; }
+
+/* 色の一覧のマス用（左上に小さく。マス数は右下） */
+.wm.mini {
+  position: absolute; left: 1px; top: 1px; gap: 1px; padding: 0 2px 0 1px; border-radius: 3px;
+  font-size: 7.5px; line-height: 1.15; pointer-events: none;
+}
+.wm.mini .wm-d { width: 9px; height: 9px; }
+.wm.mini .wm-dash { stroke-width: 1.3; stroke-dasharray: 2.2 1.4; }
+.wm.mini .wm-x { stroke-width: 1.4; }
+.pal-group h4 { display: flex; align-items: center; gap: 6px; }
+#colorChip { position: relative; width: 40px; height: 30px; }
+#colorChip .wm.mini { left: 2px; top: 2px; }
+.run .wm { font-size: 9.5px; }
