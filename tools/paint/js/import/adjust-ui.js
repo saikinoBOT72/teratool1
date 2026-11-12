@@ -18,7 +18,7 @@ let onChange = () => {};
 export function getOptions(photo) {
   return {
     bg: $('impBg').checked, trim: $('impTrim').checked, dither: photo && $('impDither').checked,
-    bright: +$('impBright').value, contrast: +$('impContrast').value, sat: +$('impSat').value, hue: +$('impHue').value,
+    flat: +$('impFlat').value, bright: +$('impBright').value, contrast: +$('impContrast').value, sat: +$('impSat').value, hue: +$('impHue').value,
     allowed: [...ui.allowed].sort((a, b) => a - b),
     walls: [...ui.walls].sort((a, b) => a - b),
     clear: ui.clear, despeckle: $('impSpeck').checked, outline: +$('impOutline').value,
@@ -98,7 +98,7 @@ export function refreshAdjustColors() { renderWalls(); renderAllowed(); renderCl
 
 export function initAdjust(cb) {
   onChange = cb;
-  for (const id of SLIDERS) {
+  for (const id of [...SLIDERS, 'impFlat']) {
     $(id).addEventListener('input', () => { $(id + 'V').textContent = $(id).value; onChange(); });
   }
   $('impColorReset').addEventListener('click', () => {

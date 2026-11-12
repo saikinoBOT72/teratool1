@@ -22,6 +22,10 @@ export const IMPORT_BODY = `
     <section>
       <h3>色</h3>
       <div class="sliders">
+        <label for="impFlat" class="wide">のっぺり <output id="impFlatV">0</output><input type="range" id="impFlat" min="0" max="10" value="0"></label>
+      </div>
+      <p class="hint">モザイクのようにまざった近い色を、色のかたまりごとに1色にまとめます。上げるほど大きくまとまります。</p>
+      <div class="sliders">
         <label for="impBright">明るさ <output id="impBrightV">0</output><input type="range" id="impBright" min="-50" max="50" value="0"></label>
         <label for="impContrast">コントラスト <output id="impContrastV">0</output><input type="range" id="impContrast" min="-50" max="50" value="0"></label>
         <label for="impSat">鮮やかさ <output id="impSatV">0</output><input type="range" id="impSat" min="-50" max="50" value="0"></label>

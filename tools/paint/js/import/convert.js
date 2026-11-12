@@ -2,8 +2,9 @@
 import { st, MAX, cellValue } from '../state.js';
 import { toLab, nearest } from './color.js';
 import { removeBackground } from './background.js';
+import { flatten } from './flatten.js';
 
-// opt = { bg, trim, bright, contrast, sat（-50..50）, hue（-180..180 度）, dither,
+// opt = { bg, trim, flat（のっぺり 0..10）, bright, contrast, sat（-50..50）, hue（-180..180 度）, dither,
 //         allowed: 使うペンキの番号の配列, walls: 使う壁の番号の配列 }。結果はマスの値（壁 × 29 + ペンキ）
 // 戻り値 { w, h, d: Uint8Array, removed, clipped, empty }
 export function convertCells(cells, opt) {
@@ -17,6 +18,7 @@ export function convertCells(cells, opt) {
     lab[i * 3] = l[0]; lab[i * 3 + 1] = l[1]; lab[i * 3 + 2] = l[2];
   }
   const removed = opt.bg ? removeBackground(w, h, lab, on) : 0;
+  flatten(w, h, lab, on, opt.flat);
 
   // 余白を詰める範囲
   let x0 = 0, y0 = 0, x1 = w - 1, y1 = h - 1;
