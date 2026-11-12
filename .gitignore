@@ -1,0 +1,72 @@
+# =========================================================
+# 公開リポジトリ用 .gitignore
+# 方針の詳細は docs/PUBLISHING_POLICY.md を参照
+# =========================================================
+
+# ---- Terraria のセーブデータ（プライバシー保護） ----
+*.plr
+*.plr.bak
+*.tplr
+*.wld
+*.wld.bak
+*.wld.bak2
+*.twld
+*.bak
+*.bak2
+Players/
+Worlds/
+Captures/
+
+# ---- ゲーム本体・抽出アセット（著作権保護） ----
+Terraria.exe
+tModLoader.exe
+*.xnb
+*.xwb
+*.xsb
+*.xgs
+Content/
+assets/extracted/
+extracted/
+
+# ---- 逆コンパイル結果（著作権保護） ----
+decompiled/
+*.decompiled.cs
+
+# ---- 個人設定・秘密情報 ----
+.env
+.env.*
+!.env.example
+*.local.json
+*.local.yaml
+*.local.toml
+config.local.*
+secrets.*
+*.key
+*.pem
+
+# ---- ローカル作業用 ----
+local/
+scratch/
+*.log
+
+# ---- ビルド成果物 ----
+bin/
+obj/
+dist/
+build/
+out/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.tmod
+
+# ---- OS / エディタ ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.vs/
+.vscode/
+.idea/
+*.swp
