@@ -1,8 +1,6 @@
 // 全作品のバックアップ（JSONファイル）と復元
-import { st } from '../state.js';
 import { download, toast } from '../util.js';
-import { listWorks, loadWork, createWork, saveCurrent, parseWork, encode } from './store.js';
-import { syncPalette } from '../palette.js';
+import { listWorks, loadWork, createWork, saveCurrent, parseWork, encode, PAINT_VERSION } from './store.js';
 
 const APP = 'teratool1-paint';
 const pad = (n) => String(n).padStart(2, '0');
@@ -12,9 +10,9 @@ export function exportBackup() {
   const works = [];
   for (const e of listWorks()) {
     const w = loadWork(e.id);
-    if (w) works.push({ name: e.name, w: w.w, h: w.h, d: encode(w.d), done: w.done, navRow: w.navRow });
+    if (w) works.push({ name: e.name, p: PAINT_VERSION, w: w.w, h: w.h, d: encode(w.d), navRow: w.navRow });
   }
-  const json = JSON.stringify({ app: APP, version: 2, exportedAt: new Date().toISOString(), palette: st.pal, works });
+  const json = JSON.stringify({ app: APP, version: 3, exportedAt: new Date().toISOString(), works });
   const t = new Date();
   const name = `paint-backup-${t.getFullYear()}${pad(t.getMonth() + 1)}${pad(t.getDate())}-${pad(t.getHours())}${pad(t.getMinutes())}.json`;
   download(new Blob([json], { type: 'application/json' }), name);
@@ -22,6 +20,7 @@ export function exportBackup() {
 }
 
 // 読み込んだ作品は既存の作品を上書きせず、新しい作品として追加する。追加した件数を返す
+// 古い版（ペンキ16色の頃）のバックアップも、新しいペンキの番号に置きかえて読み込む
 export async function importBackup(file) {
   if (file.size > 20 * 1024 * 1024) { toast('ファイルが大きすぎます'); return 0; }
   let o;
@@ -39,12 +38,6 @@ export async function importBackup(file) {
     if (createWork(name, w)) added++; else failed++;
   }
 
-  const pal = o.palette;
-  const validPal = Array.isArray(pal) && pal.length === 16 && pal.every((h) => /^#[0-9a-f]{6}$/i.test(h));
-  if (validPal && pal.some((h, i) => h.toLowerCase() !== st.pal[i].toLowerCase()) &&
-      confirm('色の調整もバックアップの内容に戻しますか？')) {
-    st.pal = pal.slice(); syncPalette();
-  }
   toast(`${added}件の作品を読み込みました` + (failed ? `（${failed}件は読み込めませんでした）` : ''));
   return added;
 }

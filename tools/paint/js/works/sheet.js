@@ -104,7 +104,7 @@ function renderList() {
 
 function newWork() {
   saveCurrent();
-  const id = createWork(nextName(), { w: 32, h: 32, d: new Uint8Array(32 * 32), done: [], navRow: 31 });
+  const id = createWork(nextName(), { w: 32, h: 32, d: new Uint8Array(32 * 32), navRow: 31 });
   if (!id) { toast('作品を作れませんでした（容量不足の可能性）'); return; }
   openWork(id);
 }

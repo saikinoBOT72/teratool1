@@ -1,10 +1,11 @@
-// 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を表示し、作り終えた行にチェックを付ける
-import { st, DEFAULTS } from '../state.js';
+// 建築ナビ: 1行ずつ「左から 赤×3 → 黒×2 …」を列番号つきで表示する
+import { st, paintName } from '../state.js';
 import { $, clamp, el } from '../util.js';
 import { addOverlay, schedule, stage } from '../render.js';
-import { updateReadout } from '../view.js';
+import { updateReadout, fit } from '../view.js';
 import { updateCursor } from '../palette.js';
 import { scheduleSave } from '../works/store.js';
+import { closePops } from '../popups.js';
 
 // 行 y の並び。末尾の空白は省く
 export function rowRuns(y) {
@@ -26,9 +27,7 @@ const orderNo = (y) => (st.naviFromBottom ? st.H - y : y + 1);
 
 function renderPanel() {
   const y = st.navRow;
-  $('naviRow').textContent = `${orderNo(y)}行目 / ${st.H}`;
-  const doneCount = [...st.done].filter((r) => r < st.H).length;
-  $('naviProgress').textContent = `${st.naviFromBottom ? '下' : '上'}から数えて・${doneCount}/${st.H}行 完了`;
+  $('naviRow').textContent = `${st.naviFromBottom ? '下' : '上'}から ${orderNo(y)}行目 / ${st.H}`;
   $('naviDir').textContent = '順番: ' + (st.naviFromBottom ? '下から' : '上から');
   $('naviDir').title = '押すと作る順番（下から／上から）を切り替え';
 
@@ -40,17 +39,14 @@ function renderPanel() {
     const pos = r.n > 1 ? `${r.x + 1}–${r.x + r.n}` : `${r.x + 1}`;
     const li = el('li', r.v ? 'run' : 'run empty');
     if (r.v) {
-      const sw = el('i'); sw.style.setProperty('--c', st.pal[r.v - 1]); li.appendChild(sw);
-      li.title = DEFAULTS[r.v - 1][0];
+      const sw = el('i'); sw.style.setProperty('--c', st.hex[r.v - 1]); li.appendChild(sw);
+      li.title = paintName(r.v);
     }
     li.appendChild(el('b', null, (r.v ? '' : '空 ') + '×' + r.n));
     li.appendChild(el('small', null, pos));
-    li.setAttribute('aria-label', `${r.v ? DEFAULTS[r.v - 1][0] : '空き'} ${r.n}マス（${pos}列目）`);
+    li.setAttribute('aria-label', `${r.v ? paintName(r.v) : '空き'} ${r.n}マス（${pos}列目）`);
     list.appendChild(li);
   }
-  const done = st.done.has(y);
-  $('naviDone').setAttribute('aria-pressed', String(done));
-  $('naviDone').textContent = done ? '✓ 完了済み' : 'この行を完了';
 }
 
 // 行が画面外なら縦方向に寄せる
@@ -68,41 +64,38 @@ export function step(d) {
   update();
 }
 
-export function toggleDone() {
-  const y = st.navRow;
-  if (st.done.has(y)) { st.done.delete(y); update(); return; }
-  st.done.add(y);
-  const last = st.naviFromBottom ? y === 0 : y === st.H - 1;
-  if (last) update(); else step(1);
-}
-
 export function selectRow(c) {
   if (!c) return;
   st.navRow = c.y; st.lastCell = c; updateReadout(); update();
 }
 
+// 作品・サイズ・色の見え方が変わったとき
 export function refreshNavi() { if (st.mode === 'navi') { st.navRow = clamp(st.navRow, 0, st.H - 1); renderPanel(); } }
 
 export function enterNavi() {
+  closePops();
   st.mode = 'navi'; st.hover = null;
   st.navRow = clamp(st.navRow, 0, st.H - 1);
   $('editPanel').hidden = true; $('naviPanel').hidden = false;
-  updateCursor(); update();
+  updateCursor(); renderPanel(); refit();
 }
+
+// 下の欄の高さが変わるので、全体が見えるように表示し直す
+function refit() { st.autoFit = true; requestAnimationFrame(() => fit()); }
 
 export function exitNavi() {
   st.mode = 'edit';
   $('naviPanel').hidden = true; $('editPanel').hidden = false;
-  updateCursor(); schedule();
+  updateCursor(); refit();
 }
 
-// キャンバス上の表示: 今の行を枠で囲み、他の行は薄く、完了した行は緑がかった色に
+// キャンバス上の表示: 今の行を枠で囲み、他の行は薄く
 function overlay(ctx) {
   if (st.mode !== 'navi') return;
   const v = st.view, w = st.W * v.s;
   for (let y = 0; y < st.H; y++) {
     if (y === st.navRow) continue;
-    ctx.fillStyle = st.done.has(y) ? 'rgba(30,120,60,0.55)' : 'rgba(15,20,25,0.45)';
+    ctx.fillStyle = 'rgba(15,20,25,0.45)';
     ctx.fillRect(v.x, v.y + y * v.s, w, v.s);
   }
   const top = Math.round(v.y + st.navRow * v.s), left = Math.round(v.x), hh = Math.round(v.s);
@@ -116,13 +109,8 @@ export function initNavi() {
   $('naviExit').addEventListener('click', exitNavi);
   $('naviPrev').addEventListener('click', () => step(-1));
   $('naviNext').addEventListener('click', () => step(1));
-  $('naviDone').addEventListener('click', toggleDone);
   $('naviDir').addEventListener('click', () => {
     st.naviFromBottom = !st.naviFromBottom;
     update();
-  });
-  $('naviReset').addEventListener('click', () => {
-    if (!st.done.size || !confirm('この作品の完了チェックを全部外しますか？')) return;
-    st.done.clear(); update();
   });
 }

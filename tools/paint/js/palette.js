@@ -1,11 +1,21 @@
-// 道具の切り替え・ペンキのパレット・色の調整・状態表示
-import { st, DEFAULTS, refreshRgb } from './state.js';
-import { $ } from './util.js';
+// 道具の切り替え・ペンキの一覧・下のバーの表示・集計
+import { st, NPAINT, refreshRgb, paintName } from './state.js';
+import { $, el } from './util.js';
 import { cv, markDirty, schedule } from './render.js';
 import { scheduleSave } from './works/store.js';
+import { closePops } from './popups.js';
 
-const palEl = $('palette');
-let swEls = [], badgeEls = [], palInputs = [];
+// 一覧のまとまり（値: 0 = 透過, 1〜29 = ペンキ）
+const GROUPS = [
+  ['透過・塗り無し', [0, 1]],
+  ['普通のペンキ', range(2, 13)],
+  ['濃いペンキ', range(14, 25)],
+  ['茶・黒・白・灰色', range(26, 29)],
+];
+function range(a, b) { const r = []; for (let i = a; i <= b; i++) r.push(i); return r; }
+
+const swEls = new Map(), badgeEls = new Map();
+const TOOL_NAMES = { pen: 'ペン', fill: '塗りつぶし', pick: 'スポイト', pan: '移動', line: '直線', rect: '四角', ellipse: '円' };
 
 export function updateCursor() {
   cv.style.cursor = (st.mode === 'navi') ? 'pointer' : (st.tool === 'pan' || st.spaceDown) ? 'grab' : 'crosshair';
@@ -14,6 +24,9 @@ export function updateCursor() {
 export function setTool(t) {
   st.tool = t;
   document.querySelectorAll('.tool').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
+  const svg = document.querySelector(`.tool[data-tool="${t}"] svg`);
+  $('toolIcon').replaceChildren(svg ? svg.cloneNode(true) : '');
+  $('toolName').textContent = TOOL_NAMES[t] || t;
   updateCursor();
 }
 
@@ -23,67 +36,60 @@ export function setMirror(on) {
   schedule(); scheduleSave();
 }
 
-export function refreshSel() {
-  swEls.forEach((b, i) => b.setAttribute('aria-pressed', String(i + 1 === st.sel)));
-  $('selName').textContent = '選択中：' + DEFAULTS[st.sel - 1][0];
+function paintChip(node, v) {
+  node.classList.toggle('is-clear', v === 0);
+  if (v) node.style.setProperty('--c', st.hex[v - 1]);
 }
 
-// 色を選んだら、描けない道具（消しゴム等）からペンに戻す
+export function refreshSel() {
+  swEls.forEach((b, v) => b.setAttribute('aria-pressed', String(v === st.sel)));
+  $('selName').textContent = paintName(st.sel);
+  $('selName2').textContent = '選択中：' + paintName(st.sel);
+  paintChip($('colorChip'), st.sel);
+}
+
+// 色を選んだら、描けない道具（移動・スポイト）からペンに戻す
 export function setSel(v) {
   st.sel = v; refreshSel();
-  if (st.tool === 'eraser' || st.tool === 'pan' || st.tool === 'pick') setTool('pen');
+  if (st.tool === 'pan' || st.tool === 'pick') setTool('pen');
   scheduleSave();
 }
 
 export function buildPalette() {
-  palEl.innerHTML = ''; swEls = []; badgeEls = [];
-  DEFAULTS.forEach((d, i) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'sw'; b.title = d[0];
-    b.style.setProperty('--c', st.pal[i]);
-    const n = document.createElement('span'); n.className = 'n'; b.appendChild(n);
-    b.addEventListener('click', () => setSel(i + 1));
-    palEl.appendChild(b); swEls.push(b); badgeEls.push(n);
-  });
+  const box = $('palette');
+  box.textContent = '';
+  for (const [title, values] of GROUPS) {
+    const g = el('div', 'pal-group');
+    g.appendChild(el('h4', null, title));
+    const row = el('div', 'pal-row');
+    for (const v of values) {
+      const b = el('button', 'sw'); b.type = 'button'; b.title = paintName(v);
+      paintChip(b, v);
+      const n = el('span', 'n'); b.appendChild(n);
+      b.addEventListener('click', () => { setSel(v); closePops(); });
+      row.appendChild(b); swEls.set(v, b); badgeEls.set(v, n);
+    }
+    g.appendChild(row); box.appendChild(g);
+  }
   refreshSel();
 }
 
-export function buildPalEditor() {
-  const box = $('palEdit'); box.innerHTML = ''; palInputs = [];
-  DEFAULTS.forEach((d, i) => {
-    const lab = document.createElement('label');
-    const inp = document.createElement('input'); inp.type = 'color'; inp.value = st.pal[i]; inp.id = 'pc' + i;
-    inp.addEventListener('input', () => {
-      st.pal[i] = inp.value; refreshRgb(); swEls[i].style.setProperty('--c', st.pal[i]);
-      markDirty(); scheduleSave();
-    });
-    const sp = document.createElement('span'); sp.textContent = d[0];
-    lab.appendChild(inp); lab.appendChild(sp); box.appendChild(lab); palInputs.push(inp);
-  });
-}
-
-// 色の調整を反映し直す（初期化・バックアップからの復元時）
-export function syncPalette() {
+// 見え方（ゲーム画面/全体マップ・壁・光）が変わったときに色を塗り直す
+export function applyColors() {
   refreshRgb();
-  swEls.forEach((b, i) => b.style.setProperty('--c', st.pal[i]));
-  palInputs.forEach((inp, i) => { inp.value = st.pal[i]; });
-  markDirty(); scheduleSave();
+  swEls.forEach((b, v) => paintChip(b, v));
+  refreshSel(); markDirty();
 }
 
-export function resetPalette() {
-  st.pal = DEFAULTS.map((d) => d[1]);
-  syncPalette();
-}
-
-// 色ごとのマス数（＝必要なペンキの数）を表示
+// ペンキごとのマス数（＝必要なペンキの数）を表示
 export function updateCounts() {
-  const c = new Array(16).fill(0);
-  for (let i = 0; i < st.data.length; i++) { const v = st.data[i]; if (v) c[v - 1]++; }
+  const c = new Array(NPAINT + 1).fill(0);
+  for (let i = 0; i < st.data.length; i++) c[st.data[i]]++;
   let total = 0, used = 0;
-  for (let i = 0; i < 16; i++) {
-    badgeEls[i].textContent = c[i] ? String(c[i]) : '';
-    swEls[i].setAttribute('aria-label', DEFAULTS[i][0] + (c[i] ? '（' + c[i] + 'マス）' : ''));
-    total += c[i]; if (c[i]) used++;
+  for (let v = 1; v <= NPAINT; v++) {
+    badgeEls.get(v).textContent = c[v] ? String(c[v]) : '';
+    swEls.get(v).setAttribute('aria-label', paintName(v) + (c[v] ? '（' + c[v] + 'マス）' : ''));
+    total += c[v]; if (c[v]) used++;
   }
   $('stats').textContent = total + 'マス・' + used + '色';
 }

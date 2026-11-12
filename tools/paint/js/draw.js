@@ -1,9 +1,9 @@
-// 描く・消す・塗りつぶし・図形・スポイト（左右対称に対応）
+// 描く・塗りつぶし・図形・スポイト（左右対称に対応）。消すときは「透過」の色で塗る
 import { st } from './state.js';
 import { clamp } from './util.js';
 import { markDirty, schedule } from './render.js';
 import { snapshot, pushUndo } from './history.js';
-import { setTool, refreshSel } from './palette.js';
+import { setTool, setSel } from './palette.js';
 import { scheduleSave } from './works/store.js';
 import { plotLine, plotRect, plotEllipse } from './shapes.js';
 
@@ -30,11 +30,10 @@ function put(x, y, val) {
   if (st.mirror) put1(mirrorX(x), y, val);
 }
 
-const strokeValue = () => (st.tool === 'eraser' ? 0 : st.sel);
 
 function paintTo(c) {
   if (!c) { stroke.last = null; return; }
-  const val = strokeValue();
+  const val = st.sel; // 0 = 透過（消す）
   if (stroke.last) plotLine(stroke.last.x, stroke.last.y, c.x, c.y, (x, y) => put(x, y, val));
   else put(c.x, c.y, val);
   stroke.last = c;
@@ -65,8 +64,8 @@ function flood(x, y, val) {
 }
 
 function pick(c) {
-  const v = st.data[c.y * st.W + c.x];
-  if (v) { st.sel = v; refreshSel(); setTool('pen'); scheduleSave(); } else { setTool('eraser'); }
+  setSel(st.data[c.y * st.W + c.x]); // 何もないマスなら「透過」を選ぶ
+  setTool('pen');
 }
 
 // 押した瞬間の処理。p はキャンバス上の座標

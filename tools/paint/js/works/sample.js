@@ -17,7 +17,7 @@ const SAMPLE = [
   '................',
   '................',
 ];
-const MAP = { '.': 0, r: 1, p: 12, k: 13, w: 14 };
+const MAP = { '.': 0, r: 14, p: 15, k: 27, w: 28 }; // 濃い赤・濃いピンク・黒・白
 
 export function sampleWork() {
   const w = 16, h = 16, d = new Uint8Array(w * h);

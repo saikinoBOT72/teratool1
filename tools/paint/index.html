@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#172026">
@@ -10,8 +10,10 @@
 <link rel="manifest" href="../../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="../../assets/base.css">
+<link rel="stylesheet" href="../../assets/mobile.css">
 <link rel="stylesheet" href="css/paint.css">
 <link rel="stylesheet" href="css/sheet.css">
+<link rel="stylesheet" href="css/bar.css">
 <link rel="stylesheet" href="css/navi.css">
 <link rel="stylesheet" href="css/works.css">
 <link rel="stylesheet" href="css/import.css">
@@ -55,39 +57,45 @@
   </main>
 
   <section class="dock" aria-label="道具とペンキ">
-    <div class="edit-panel" id="editPanel">
+    <div class="bar" id="editPanel">
+      <button class="bar-btn" type="button" id="btnTool" aria-expanded="false" aria-controls="toolPop" title="道具を選ぶ">
+        <span class="bar-icon" id="toolIcon" aria-hidden="true"></span><span class="bar-label" id="toolName">ペン</span>
+      </button>
+      <button class="bar-btn" type="button" id="btnColor" aria-expanded="false" aria-controls="colorPop" title="ペンキを選ぶ">
+        <i class="bar-chip" id="colorChip" aria-hidden="true"></i><span class="bar-label" id="selName">濃い赤</span>
+      </button>
+      <button class="bar-btn icon" type="button" id="btnMirror" aria-pressed="false" aria-label="左右対称" title="左右対称 (M)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5zM15 7l5 5-5 5z"/></svg></button>
+      <button class="bar-btn icon" type="button" id="btnNavi" aria-label="建築ナビ" title="建築ナビ (N)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M15 9l3 3-3 3"/></svg></button>
+    </div>
+
+    <div class="pop" id="toolPop" role="dialog" aria-label="道具" hidden>
       <div class="tools" id="tools" role="toolbar" aria-label="道具">
         <button class="tool" type="button" data-tool="pen" aria-pressed="true" title="ペン (B)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/></svg>ペン</button>
-        <button class="tool" type="button" data-tool="eraser" aria-pressed="false" title="消しゴム (E)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15l8.5-8.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11 20H7z"/><path d="M9 11l5 5"/></svg>消しゴム</button>
         <button class="tool" type="button" data-tool="fill" aria-pressed="false" title="塗りつぶし (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l6-6 7 7-6 6a2 2 0 0 1-2.8 0L5 13.8a2 2 0 0 1 0-2.8z"/><path d="M19 15s2 2.2 2 3.5a2 2 0 0 1-4 0c0-1.3 2-3.5 2-3.5z"/></svg>塗りつぶし</button>
         <button class="tool" type="button" data-tool="pick" aria-pressed="false" title="スポイト (I)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l4 4"/><path d="M17.5 2.8a2 2 0 0 1 2.8 2.8l-2.3 2.3-2.8-2.8z"/><path d="M14 8.5L5 17.5V20h2.5l9-9"/></svg>スポイト</button>
+        <button class="tool" type="button" data-tool="pan" aria-pressed="false" title="移動 (H)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 6-6 6-3 0-4.5-1.5-6-4l-1.7-3a1.5 1.5 0 0 1 2.6-1.5L8 14"/></svg>移動</button>
         <button class="tool" type="button" data-tool="line" aria-pressed="false" title="直線 (L)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L19 5"/><path d="M4 18h2v2H4zM18 4h2v2h-2z"/></svg>直線</button>
         <button class="tool" type="button" data-tool="rect" aria-pressed="false" title="四角 (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v12H5z"/></svg>四角</button>
         <button class="tool" type="button" data-tool="ellipse" aria-pressed="false" title="円 (O)"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg>円</button>
-        <button class="tool" type="button" data-tool="pan" aria-pressed="false" title="移動 (H)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 6-6 6-3 0-4.5-1.5-6-4l-1.7-3a1.5 1.5 0 0 1 2.6-1.5L8 14"/></svg>移動</button>
       </div>
-      <div class="opts">
-        <button class="opt" type="button" id="btnMirror" aria-pressed="false" title="左右対称 (M)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5zM15 7l5 5-5 5z"/></svg>左右対称</button>
-        <button class="opt" type="button" id="btnNavi" title="建築ナビ (N)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M15 9l3 3-3 3"/></svg>建築ナビ</button>
-      </div>
+    </div>
+
+    <div class="pop" id="colorPop" role="dialog" aria-label="ペンキ" hidden>
+      <div class="color-controls" id="colorControls"></div>
       <div class="palette" id="palette" role="group" aria-label="ペンキの色"></div>
-      <div class="status"><span id="selName"></span><span id="stats"></span></div>
+      <div class="status"><span id="selName2"></span><span id="stats"></span></div>
     </div>
 
     <div class="navi-panel" id="naviPanel" hidden>
       <div class="navi-head">
-        <div class="navi-title"><strong id="naviRow"></strong><span id="naviProgress"></span></div>
+        <strong id="naviRow"></strong>
         <button class="opt" type="button" id="naviDir"></button>
       </div>
       <ol class="runs" id="naviRuns" aria-live="polite"></ol>
       <div class="navi-actions">
         <button class="btn" type="button" id="naviPrev">前の行</button>
-        <button class="btn primary" type="button" id="naviDone" aria-pressed="false">完了</button>
         <button class="btn" type="button" id="naviNext">次の行</button>
-      </div>
-      <div class="navi-foot">
         <button class="btn" type="button" id="naviExit">編集に戻る</button>
-        <button class="btn" type="button" id="naviReset">チェックを全部外す</button>
       </div>
     </div>
   </section>
@@ -139,7 +147,7 @@
       </div>
       <div id="exportFallback" class="stack" hidden>
         <p class="hint">ダウンロードが始まらない場合は、下の画像を長押し（または右クリック）して保存してください。</p>
-        <img id="exportImg" alt="書き出した画像">
+        <img id="exportImg" class="savable" alt="書き出した画像">
       </div>
     </section>
     <section>
@@ -147,15 +155,15 @@
       <label class="chk" for="chkMajor"><input type="checkbox" id="chkMajor" checked>10マスごとに濃い線を入れる</label>
     </section>
     <section>
-      <h3>色の調整</h3>
-      <p class="hint">白い単色ブロックに塗ったときの見た目を想定した色です。ゲーム画面と見比べて、ずれていたら直せます。</p>
-      <div class="paledit" id="palEdit"></div>
-      <div><button class="btn" id="btnPalReset" type="button">初期値に戻す</button></div>
+      <h3>色の見え方</h3>
+      <p class="hint">ジェムスパークの壁に塗ったときの色です。描いた中身は変わらず、表示の色だけが切りかわります。</p>
+      <div class="color-controls" id="menuColorControls"></div>
     </section>
   </div>
 </div>
 
 <script type="module" src="js/main.js"></script>
 <script type="module" src="../../assets/pwa.js"></script>
+<script type="module" src="../../assets/mobile.js"></script>
 </body>
 </html>

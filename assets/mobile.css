@@ -1,0 +1,22 @@
+/* スマホ向けの調整（全ページ共通）
+   - ダブルタップで拡大しない（touch-action: manipulation）
+   - 長押しで文字が選択されたり、メニュー・拡大鏡が出たりしない
+   - 引っぱって再読み込み・スクロールの跳ね返りをしない
+   - 押したときの青いハイライトを出さない
+   入力欄と、長押しで保存したい画像（.savable）だけは元の動きのまま */
+html {
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+body {
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+button, a, label, select, summary { touch-action: manipulation; }
+input, textarea, select, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+img { -webkit-user-drag: none; }
+img.savable { -webkit-touch-callout: default; -webkit-user-select: auto; user-select: auto; -webkit-user-drag: auto; }
+/* iOS は 16px 未満の入力欄にフォーカスすると画面を拡大するため */
+input[type="text"], input[type="number"], select, textarea { font-size: max(16px, 1em); }

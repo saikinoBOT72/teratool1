@@ -85,48 +85,6 @@ body {
   background: var(--panel); font-size: 15px; font-weight: 500;
 }
 
-/* dock */
-.dock { display: grid; gap: 8px; min-width: 0; }
-.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.tool {
-  display: grid; justify-items: center; gap: 2px;
-  padding: 5px 2px 3px; min-height: 46px;
-  border: 1px solid var(--line); border-radius: 10px;
-  background: var(--panel); font-size: 11px; line-height: 1.2;
-}
-.tool[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-.palette { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
-.sw {
-  position: relative; aspect-ratio: 1; min-width: 0; padding: 0;
-  background: var(--c); border: 1px solid rgba(127, 127, 127, 0.5); border-radius: 8px;
-}
-.sw[aria-pressed="true"] { outline: 3px solid var(--ring); outline-offset: 2px; }
-.sw .n {
-  position: absolute; right: 2px; bottom: 2px;
-  padding: 2px 4px; border-radius: 4px;
-  background: rgba(0, 0, 0, 0.62); color: #fff;
-  font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums;
-}
-.sw .n:empty { display: none; }
-.status {
-  display: flex; justify-content: space-between; gap: 8px;
-  font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
-  min-height: 18px;
-}
-.status #selName { color: var(--fg); font-weight: 500; }
-
-@media (min-width: 880px) {
-  .app {
-    grid-template-columns: minmax(0, 1fr) 300px;
-    grid-template-rows: auto minmax(0, 1fr);
-    column-gap: 12px;
-  }
-  .top { grid-column: 1 / -1; }
-  .dock { align-content: start; overflow-y: auto; }
-  .palette { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-  .sw .n { font-size: 11px; }
-}
-
 /* toast */
 .toast {
   position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
@@ -150,10 +108,6 @@ a.ib { color: inherit; text-decoration: none; flex-shrink: 0; }
   .brand h1 { font-size: 15px; letter-spacing: 0; }
 }
 .brand h1 { overflow: hidden; text-overflow: ellipsis; }
-/* 広い画面: スクロール領域で選択枠(outline)が切れないよう余白を取る */
-@media (min-width: 880px) {
-  .dock { padding: 5px; margin: -5px; }
-}
 @media (max-width: 370px) {
   .brand h1 { font-size: 14px; }
 }
@@ -166,9 +120,7 @@ a.ib { color: inherit; text-decoration: none; flex-shrink: 0; }
 }
 .brand-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
-/* 道具の下の切り替えボタン（左右対称・建築ナビ） */
-.edit-panel { display: grid; gap: 8px; min-width: 0; }
-.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+/* 小さな切り替えボタン（建築ナビの順番など） */
 .opt {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: 38px; padding: 0 10px;

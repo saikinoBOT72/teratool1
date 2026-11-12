@@ -7,7 +7,11 @@ import { cellAt, beginAction, continueStroke, endStroke, cancelStroke } from './
 import { setTool, setMirror, updateCursor } from './palette.js';
 import { undo, redo } from './history.js';
 import { sheetOpen, closeSheet } from './sheet.js';
-import { enterNavi, exitNavi, selectRow, step, toggleDone } from './navi/navi.js';
+import { enterNavi, exitNavi, selectRow, step } from './navi/navi.js';
+import { popOpen, closePops } from './popups.js';
+import { setSel } from './palette.js';
+import { toggleColorMode } from './colorset.js';
+import { onColorsChanged } from './colors-changed.js';
 
 const pointers = new Map();
 let mode = null;   // 'draw' | 'pan' | 'gesture' | 'none' | null
@@ -41,6 +45,8 @@ function startPan(p) { mode = 'pan'; panLast = p; cv.style.cursor = 'grabbing'; 
 
 function onDown(e) {
   e.preventDefault();
+  // 一覧が開いていたら、キャンバスを押しても描かずに閉じるだけ
+  if (popOpen()) { closePops(); return; }
   try { cv.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
   const p = local(e);
   pointers.set(e.pointerId, p);
@@ -82,15 +88,15 @@ function onUp(e) {
   schedule();
 }
 
-const KEY_TOOLS = { b: 'pen', e: 'eraser', f: 'fill', i: 'pick', h: 'pan', l: 'line', r: 'rect', o: 'ellipse' };
+const KEY_TOOLS = { b: 'pen', f: 'fill', i: 'pick', h: 'pan', l: 'line', r: 'rect', o: 'ellipse' };
 
-// 建築ナビ中のキー: ↑↓ で行を移動、Enter で完了、N で編集に戻る
+// 建築ナビ中のキー: ↑↓ で行を移動、N で編集に戻る
 function naviKey(e, k) {
   if (k === 'arrowup' || k === 'arrowdown') {
     e.preventDefault();
     step((k === 'arrowup') === st.naviFromBottom ? 1 : -1);
-  } else if (k === 'enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); toggleDone(); }
-  else if (k === 'n') exitNavi();
+  } else if (k === 'n') exitNavi();
+  else if (k === 'v') toggleColorMode(onColorsChanged);
   else if (k === 'g') toggleGrid();
   else if (k === '+' || k === '=') zoomCenter(1);
   else if (k === '-') zoomCenter(-1);
@@ -99,7 +105,7 @@ function naviKey(e, k) {
 function onKeyDown(e) {
   const tag = e.target && e.target.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  if (e.key === 'Escape') { closeSheet(); return; }
+  if (e.key === 'Escape') { closePops(); closeSheet(); return; }
   const k = e.key.toLowerCase();
   const mod = e.ctrlKey || e.metaKey;
   if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
@@ -109,6 +115,8 @@ function onKeyDown(e) {
   if (st.mode === 'navi') { naviKey(e, k); return; }
   if (KEY_TOOLS[k]) setTool(KEY_TOOLS[k]);
   else if (k === 'm') setMirror(!st.mirror);
+  else if (k === 'e') setSel(0); // E = 透過（消す）
+  else if (k === 'v') toggleColorMode(onColorsChanged);
   else if (k === 'n') enterNavi();
   else if (k === 'g') toggleGrid();
   else if (k === '+' || k === '=') zoomCenter(1);

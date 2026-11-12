@@ -1,5 +1,5 @@
 // 画像の取り込み（シートの操作と処理の流れ）
-//   画像 → 範囲 → マス目（自動検出 or 手動）→ マスの色 → 背景除去・余白詰め・色の調整 → 16色
+//   画像 → 範囲 → マス目（自動検出 or 手動）→ マスの色 → 背景除去・余白詰め・色の調整 → ペンキ → 仕上げ
 import { st } from '../state.js';
 import { $, toast } from '../util.js';
 import { makeSheet, openSheet, closeSheet } from '../sheet.js';
@@ -13,6 +13,8 @@ import { detectGrid, gridForCell } from './grid.js';
 import { sampleGrid, resampleArea } from './cells.js';
 import { convertCells } from './convert.js';
 import { initSources } from './sources.js';
+import { postprocess } from './postprocess.js';
+import { initAdjust, getOptions, resetForNewImage, toggleClear, refreshAdjustColors } from './adjust-ui.js';
 
 const LIMIT = 2048; // 解析する画像の長辺の上限（px）
 let sheet, view;
@@ -41,6 +43,7 @@ export function loadImageFile(file) {
       src.jpeg = /jpe?g/i.test(file.type) && src.w === im.naturalWidth;
       baseName = (file.name || '').replace(/\.[^.]+$/, '').trim().slice(0, 30);
       $('impBody').hidden = false;
+      resetForNewImage();
       view.setImage(src.canvas);
       setCrop({ x: 0, y: 0, w: src.w, h: src.h });
     } catch (e) { toast('画像を読み込めませんでした'); }
@@ -94,15 +97,14 @@ function resample() {
 // 背景・色の設定を反映してプレビュー
 function remap() {
   const pc = $('impPrev');
-  result = cells && convertCells(cells, {
-    bg: $('impBg').checked, trim: $('impTrim').checked, dither: mode() === 'photo' && $('impDither').checked,
-    bright: +$('impBright').value, sat: +$('impSat').value,
-  });
-  const ok = !!(result && !result.empty);
+  const opt = getOptions(mode() === 'photo');
+  result = cells && convertCells(cells, opt);
+  if (result && !result.empty) result = postprocess(result, opt);
+  const ok = !!(result && !result.empty && result.d.some((v) => v));
   $('impNew').disabled = !ok; $('impReplace').disabled = !ok;
   if (!ok) {
     pc.width = 1; pc.height = 1;
-    $('impInfo').textContent = result && result.empty ? '全部背景として消えてしまいました。「背景を自動で透明にする」を外してください。' : '';
+    $('impInfo').textContent = result ? '全部透明になってしまいました。「背景を自動で透明にする」や、透明にした色を外してください。' : '';
     return;
   }
   pc.width = result.w; pc.height = result.h;
@@ -124,18 +126,22 @@ function apply(asNew) {
   if (!result || result.empty) return;
   const { w, h, d } = result;
   if (asNew) {
-    const id = createWork(nextName(baseName || '取り込み'), { w, h, d, done: [], navRow: h - 1 });
+    const id = createWork(nextName(baseName || '取り込み'), { w, h, d, navRow: h - 1 });
     if (!id || !openWork(id)) { toast('保存できませんでした（容量不足の可能性）'); return; }
   } else {
     pushUndo(snapshot());
-    st.W = w; st.H = h; st.data = d.slice(); st.done.clear(); st.navRow = h - 1;
+    st.W = w; st.H = h; st.data = d.slice(); st.navRow = h - 1;
     afterData(true); refreshNavi();
   }
   closeSheet();
   toast(`${w} × ${h}マスで取り込みました`);
 }
 
-export function openImport() { openSheet(sheet); if (src) view.redraw(); }
+export function openImport() {
+  openSheet(sheet);
+  refreshAdjustColors(); // 色の見え方が変わっているかもしれないので
+  if (src) { view.redraw(); remap(); }
+}
 
 export function initImporter() {
   sheet = makeSheet('importSheet', '画像を取り込む', IMPORT_BODY);
@@ -146,9 +152,15 @@ export function initImporter() {
   $('impCell').addEventListener('change', () => { const v = +$('impCell').value; if (v >= 1 && v <= 256) { manual = v; resample(); } });
   $('impAuto').addEventListener('click', () => { manual = 0; resample(); });
   $('impSize').addEventListener('change', resample);
-  ['impDither', 'impBg', 'impTrim'].forEach((id) => $(id).addEventListener('change', remap));
-  ['impBright', 'impSat'].forEach((id) => $(id).addEventListener('input', remap));
-  $('impColorReset').addEventListener('click', () => { $('impBright').value = 0; $('impSat').value = 0; remap(); });
+  $('impDither').addEventListener('change', remap);
+  initAdjust(remap);
+  // 結果の絵をタップ → その色を透明に
+  $('impPrev').addEventListener('click', (e) => {
+    if (!result || result.empty) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * result.w), y = Math.floor((e.clientY - r.top) / r.height * result.h);
+    if (x >= 0 && y >= 0 && x < result.w && y < result.h) toggleClear(result.d[y * result.w + x]);
+  });
   $('impNew').addEventListener('click', () => apply(true));
   $('impReplace').addEventListener('click', () => apply(false));
 

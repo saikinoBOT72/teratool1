@@ -36,18 +36,46 @@ export const IMPORT_BODY = `
   </div>
 </section>
 <section>
-  <h3>3. 背景と色</h3>
+  <h3>3. 背景</h3>
   <label class="chk" for="impBg"><input type="checkbox" id="impBg" checked>背景を自動で透明にする</label>
   <label class="chk" for="impTrim"><input type="checkbox" id="impTrim" checked>まわりの余白を詰める</label>
+  <p class="hint">消えずに残った背景などは、下の「結果」の絵をタップすると、その色をまとめて透明にできます。</p>
+  <div class="chips" id="impClearList"></div>
+</section>
+<section>
+  <h3>4. 色</h3>
+  <div class="sliders">
+    <label for="impBright">明るさ <output id="impBrightV">0</output><input type="range" id="impBright" min="-50" max="50" value="0"></label>
+    <label for="impContrast">コントラスト <output id="impContrastV">0</output><input type="range" id="impContrast" min="-50" max="50" value="0"></label>
+    <label for="impSat">鮮やかさ <output id="impSatV">0</output><input type="range" id="impSat" min="-50" max="50" value="0"></label>
+    <label for="impHue">色相 <output id="impHueV">0</output><input type="range" id="impHue" min="-180" max="180" value="0"></label>
+  </div>
+  <div><button class="btn small" type="button" id="impColorReset">色の調整を元に戻す</button></div>
+  <details class="allowed">
+    <summary>使うペンキを選ぶ（<span id="impAllowedCount"></span>）</summary>
+    <div class="chips" id="impPresets">
+      <button class="chip" type="button" data-preset="standard">塗り無し以外</button>
+      <button class="chip" type="button" data-preset="all">全部</button>
+      <button class="chip" type="button" data-preset="normal">普通＋茶黒白灰</button>
+      <button class="chip" type="button" data-preset="deep">濃い＋茶黒白灰</button>
+    </div>
+    <p class="hint">押して使う・使わないを切り替えます。持っているペンキだけにするときなどに。</p>
+    <div class="allowed-grid" id="impAllowed"></div>
+  </details>
+</section>
+<section>
+  <h3>5. 仕上げ</h3>
+  <label class="chk" for="impSpeck"><input type="checkbox" id="impSpeck">1マスだけのゴミを取る（まわりと違う色の1マスを、まわりの色に）</label>
+  <div class="row"><label for="impOutline">ふち取り<select id="impOutline"><option value="0">なし</option></select></label></div>
   <div class="row">
-    <label for="impBright">明るさ <input type="range" id="impBright" min="-50" max="50" value="0"></label>
-    <label for="impSat">鮮やかさ <input type="range" id="impSat" min="-50" max="50" value="0"></label>
-    <button class="btn small" type="button" id="impColorReset">色を元に戻す</button>
+    <button class="btn small" type="button" id="impFlipH" aria-pressed="false">左右反転</button>
+    <button class="btn small" type="button" id="impFlipV" aria-pressed="false">上下反転</button>
+    <button class="btn small" type="button" id="impRot">右に回す</button>
   </div>
 </section>
 <section>
-  <h3>4. 結果</h3>
-  <div class="preview"><canvas id="impPrev" aria-label="取り込み結果のプレビュー"></canvas></div>
+  <h3>6. 結果</h3>
+  <div class="preview"><canvas id="impPrev" aria-label="取り込み結果。タップでその色を透明に"></canvas></div>
   <p class="hint" id="impInfo"></p>
   <div class="row">
     <button class="btn primary" type="button" id="impNew">新しい作品として取り込む</button>

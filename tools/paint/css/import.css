@@ -13,3 +13,16 @@
 .seg input { margin: 0; }
 .imp-drop { outline: 3px dashed var(--ring); outline-offset: -6px; }
 .warn { color: #c62828; }
+.sliders { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; }
+.sliders label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; color: var(--muted); }
+.sliders input[type="range"] { grid-column: 1 / -1; width: 100%; }
+.sliders output { font-variant-numeric: tabular-nums; color: var(--fg); }
+.allowed summary { cursor: pointer; font-size: 14px; font-weight: 500; padding: 6px 0; }
+.allowed { display: grid; gap: 8px; }
+.allowed[open] > :not(summary) { margin-top: 8px; }
+.allowed-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.pchip { display: inline-flex; align-items: center; gap: 6px; height: 36px; min-width: 0; padding: 0 10px 0 5px; font-size: 13px; }
+.pchip .chip-c { width: 24px; height: 24px; }
+.allowed-grid .pchip[aria-pressed="false"] { opacity: 0.4; text-decoration: line-through; }
+#impPrev { cursor: pointer; }
+.btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }

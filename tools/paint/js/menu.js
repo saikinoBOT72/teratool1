@@ -1,9 +1,11 @@
-// メニュー（作品・サイズ変更・全消去・PNG書き出し・表示設定・色の調整）
+// メニュー（作品・サイズ変更・全消去・PNG書き出し・表示設定・色の見え方）
 import { st, MAX } from './state.js';
 import { $, clamp, toast, download } from './util.js';
 import { img, schedule } from './render.js';
 import { snapshot, pushUndo, afterData } from './history.js';
-import { updateSizeUI, resetPalette } from './palette.js';
+import { updateSizeUI } from './palette.js';
+import { buildColorControls } from './colorset.js';
+import { onColorsChanged } from './colors-changed.js';
 import { scheduleSave } from './works/store.js';
 import { openSheet, closeSheet, wireSheet } from './sheet.js';
 import { refreshNavi } from './navi/navi.js';
@@ -59,6 +61,6 @@ export function initMenu() {
     closeSheet(); toast('全部消しました（元に戻せます）');
   });
   $('chkMajor').addEventListener('change', () => { st.showMajor = $('chkMajor').checked; schedule(); scheduleSave(); });
-  $('btnPalReset').addEventListener('click', () => { resetPalette(); toast('色を初期値に戻しました'); });
+  buildColorControls($('menuColorControls'), onColorsChanged);
   $('btnExport').addEventListener('click', exportPng);
 }

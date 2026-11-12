@@ -1,8 +1,9 @@
 // 作品と設定の保存（この端末のブラウザの localStorage のみ）
 //   teratool1.paint.settings      … 色の調整・表示設定・開いている作品
 //   teratool1.paint.works         … 作品の一覧 [{ id, name, w, h, updated }]
-//   teratool1.paint.work.<id>     … 作品の中身 { w, h, d, done, navRow }
-import { st, MAX } from '../state.js';
+//   teratool1.paint.work.<id>     … 作品の中身 { p: 2, w, h, d, navRow }
+//   p = ペンキの番号の付け方の版。p がないものは旧16色の番号なので、読み込み時に新しい番号へ置きかえる
+import { st, MAX, NPAINT } from '../state.js';
 import { uid, toast } from '../util.js';
 import { sampleWork } from './sample.js';
 
@@ -29,21 +30,27 @@ export function decode(s, n) {
   const d = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     const v = s.charCodeAt(i) - 48;
-    if (v < 0 || v > 16) return null;
+    if (v < 0 || v > NPAINT) return null;
     d[i] = v;
   }
   return d;
 }
 
-// 保存形式（d は文字列）を検証して { w, h, d: Uint8Array, done: number[], navRow } に
+// 旧16色（濃い12色 + 黒・白・グレー・茶）→ 新しい番号（1 + PAINTS の位置）
+const OLD = { 1: 14, 2: 18, 3: 17, 4: 25, 5: 24, 6: 23, 7: 22, 8: 21, 9: 20, 10: 19, 11: 16, 12: 15, 13: 27, 14: 28, 15: 29, 16: 26 };
+export const PAINT_VERSION = 2;
+
+// 保存形式（d は文字列）を検証して { w, h, d: Uint8Array, navRow } に
 export function parseWork(o) {
   if (!o || !Number.isInteger(o.w) || !Number.isInteger(o.h)) return null;
   if (o.w < 1 || o.h < 1 || o.w > MAX || o.h > MAX) return null;
   const d = decode(o.d, o.w * o.h);
   if (!d) return null;
-  const done = Array.isArray(o.done) ? o.done.filter((y) => Number.isInteger(y) && y >= 0 && y < o.h) : [];
+  if (o.p !== PAINT_VERSION) {
+    for (let i = 0; i < d.length; i++) { if (d[i] > 16) return null; d[i] = d[i] ? OLD[d[i]] : 0; }
+  }
   const navRow = Number.isInteger(o.navRow) && o.navRow >= 0 && o.navRow < o.h ? o.navRow : o.h - 1;
-  return { w: o.w, h: o.h, d, done, navRow };
+  return { w: o.w, h: o.h, d, navRow };
 }
 
 export function listWorks() {
@@ -54,7 +61,7 @@ export function loadWork(id) { return parseWork(read(kWork(id))); }
 
 // 作品を保存し、一覧の情報も更新する。容量不足なら false
 export function putWork(id, name, w) {
-  const ok = write(kWork(id), { w: w.w, h: w.h, d: encode(w.d), done: [...(w.done || [])], navRow: w.navRow ?? w.h - 1 });
+  const ok = write(kWork(id), { p: PAINT_VERSION, w: w.w, h: w.h, d: encode(w.d), navRow: w.navRow ?? w.h - 1 });
   if (!ok) return false;
   const list = listWorks().filter((e) => e.id !== id);
   list.unshift({ id, name, w: w.w, h: w.h, updated: Date.now() });
@@ -90,23 +97,22 @@ export function applyWork(id) {
   const entry = listWorks().find((e) => e.id === id);
   st.workId = id; st.workName = entry ? entry.name : '作品';
   st.W = w.w; st.H = w.h; st.data = w.d;
-  st.done = new Set(w.done); st.navRow = w.navRow;
+  st.navRow = w.navRow;
   return true;
 }
 
 let warned = false;
 export function saveCurrent() {
   if (!st.workId) return;
-  const done = [...st.done].filter((y) => y < st.H);
-  const ok = putWork(st.workId, st.workName, { w: st.W, h: st.H, d: st.data, done, navRow: Math.min(st.navRow, st.H - 1) });
+  const ok = putWork(st.workId, st.workName, { w: st.W, h: st.H, d: st.data, navRow: Math.min(st.navRow, st.H - 1) });
   if (!ok && !warned) { warned = true; toast('保存できませんでした（ブラウザの保存容量がいっぱいの可能性）'); }
   if (ok) warned = false;
 }
 
 export function saveSettings() {
   write(K_SETTINGS, {
-    v: 2, pal: st.pal, grid: st.showGrid, major: st.showMajor, sel: st.sel,
-    mirror: st.mirror, fromBottom: st.naviFromBottom, current: st.workId,
+    v: 3, grid: st.showGrid, major: st.showMajor, sel: st.sel, mirror: st.mirror, fromBottom: st.naviFromBottom,
+    colorMode: st.colorMode, gem: st.gem, lit: st.lit, current: st.workId,
   });
 }
 
@@ -116,10 +122,14 @@ export function scheduleSave() { clearTimeout(timer); timer = setTimeout(save, 4
 
 function applySettings(o) {
   if (!o) return;
-  if (Array.isArray(o.pal) && o.pal.length === 16 && o.pal.every((h) => /^#[0-9a-f]{6}$/i.test(h))) st.pal = o.pal.slice();
   if (typeof o.grid === 'boolean') st.showGrid = o.grid;
   if (typeof o.major === 'boolean') st.showMajor = o.major;
-  if (o.sel >= 1 && o.sel <= 16) st.sel = o.sel;
+  // v3 より前の選択中の色は旧16色の番号
+  if (o.v >= 3 && Number.isInteger(o.sel) && o.sel >= 0 && o.sel <= NPAINT) st.sel = o.sel;
+  else if (OLD[o.sel]) st.sel = OLD[o.sel];
+  if (o.colorMode === 'world' || o.colorMode === 'map') st.colorMode = o.colorMode;
+  if (o.gem === 'other' || o.gem === 'diamond') st.gem = o.gem;
+  if (typeof o.lit === 'boolean') st.lit = o.lit;
   if (typeof o.mirror === 'boolean') st.mirror = o.mirror;
   if (typeof o.fromBottom === 'boolean') st.naviFromBottom = o.fromBottom;
 }
@@ -146,7 +156,7 @@ export function boot() {
   const ids = [s && s.current, ...list.map((e) => e.id)].filter(Boolean);
   for (const id of ids) if (applyWork(id)) return;
   const sample = sampleWork();
-  const id = createWork('作品 1', { ...sample, done: [], navRow: sample.h - 1 });
+  const id = createWork('作品 1', { ...sample, navRow: sample.h - 1 });
   if (id && applyWork(id)) return;
   // 保存できない環境（プライベートモード等）でも描けるようにする
   st.workId = null; st.workName = '作品 1';

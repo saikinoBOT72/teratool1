@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>teratool</title>
@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/mobile.css">
 <link rel="stylesheet" href="assets/home.css">
 </head>
 <body>
@@ -27,7 +28,7 @@
             <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 17h6M17 14v6"/></svg>
           </span>
           <h2>ペンキドット絵</h2>
-          <p>16色のペンキでドット絵の設計図を描く。画像の取り込みとPNG書き出しにも対応。</p>
+          <p>ペンキでドット絵の設計図を描く。ジェムスパークの壁の色で表示、画像の取り込み・建築ナビつき。</p>
         </a>
       </li>
       <li>
@@ -49,5 +50,6 @@
   </footer>
 </div>
 <script type="module" src="assets/pwa.js"></script>
+<script type="module" src="assets/mobile.js"></script>
 </body>
 </html>
