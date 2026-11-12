@@ -3,9 +3,10 @@ export const IMPORT_BODY = `
 <section>
   <p class="hint">ネットで見つけたドット絵や自分で描いたドット絵の画像から、マス目を自動で見つけて16色のペンキに置きかえます。だいたいの切り抜き・ぼやけた拡大でも大丈夫です。画像はこの端末の中だけで処理され、どこにも送信されません。</p>
   <div class="row">
-    <label class="btn primary file-btn">画像を選ぶ<input type="file" id="impFile" accept="image/*"></label>
-    <span class="hint">PCなら貼り付け（Ctrl+V）やドラッグ＆ドロップでもOK</span>
+    <label class="btn primary file-btn">画像・写真を選ぶ<input type="file" id="impFile" accept="image/*"></label>
+    <button class="btn" type="button" id="impPaste">コピーした画像を貼り付け</button>
   </div>
+  <p class="hint">ネットの画像は、長押し（PCは右クリック）→「画像をコピー」してから「貼り付け」を押すとそのまま取り込めます。PCなら Ctrl+V やドラッグ＆ドロップでもOK。</p>
 </section>
 <div id="impBody" hidden>
 <section>

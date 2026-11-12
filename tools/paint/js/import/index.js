@@ -12,6 +12,7 @@ import { createSourceView } from './source-view.js';
 import { detectGrid, gridForCell } from './grid.js';
 import { sampleGrid, resampleArea } from './cells.js';
 import { convertCells } from './convert.js';
+import { initSources } from './sources.js';
 
 const LIMIT = 2048; // 解析する画像の長辺の上限（px）
 let sheet, view;
@@ -30,7 +31,7 @@ function prepare(im) {
 }
 
 export function loadImageFile(file) {
-  if (!file || !/^image\//.test(file.type)) { toast('画像ファイルを選んでください'); return; }
+  if (!file || !/^image\//.test(file.type)) { toast('画像を選んでください'); return; }
   openImport();
   const url = URL.createObjectURL(file), im = new Image();
   im.onload = () => {
@@ -151,14 +152,5 @@ export function initImporter() {
   $('impNew').addEventListener('click', () => apply(true));
   $('impReplace').addEventListener('click', () => apply(false));
 
-  // 貼り付け・ドラッグ＆ドロップ（どの画面からでも）
-  window.addEventListener('paste', (e) => {
-    const item = [...(e.clipboardData ? e.clipboardData.items : [])].find((i) => i.type.startsWith('image/'));
-    if (item) { e.preventDefault(); loadImageFile(item.getAsFile()); }
-  });
-  window.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
-  window.addEventListener('drop', (e) => {
-    const f = e.dataTransfer && [...e.dataTransfer.files].find((x) => x.type.startsWith('image/'));
-    if (f) { e.preventDefault(); loadImageFile(f); }
-  });
+  initSources(loadImageFile);
 }
