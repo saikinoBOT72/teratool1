@@ -19,6 +19,7 @@
 .run i { width: 22px; height: 22px; border-radius: 5px; border: 1px solid rgba(127, 127, 127, 0.5); background: var(--c); flex-shrink: 0; }
 .run b { font-size: 15px; }
 .run .nm { font-weight: 700; white-space: nowrap; }
+.run .block-icon { width: 24px; height: 24px; flex-shrink: 0; }
 .run small { color: var(--muted); font-size: 11px; }
 .run.empty { border-style: dashed; background: transparent; color: var(--muted); padding-left: 8px; }
 .runs .none { color: var(--muted); font-size: 13px; padding: 6px; }
