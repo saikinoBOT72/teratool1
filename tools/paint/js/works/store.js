@@ -1,12 +1,15 @@
 // 作品と設定の保存（この端末のブラウザの localStorage のみ）
-//   teratool1.paint.settings      … 色の調整・表示設定・開いている作品
+//   teratool1.paint.settings      … 表示設定・選択中の色・最近使った色・開いている作品
 //   teratool1.paint.works         … 作品の一覧 [{ id, name, w, h, updated }]
-//   teratool1.paint.work.<id>     … 作品の中身 { p: 3, w, h, d, navRow }
-//   p = マスの値の付け方の版（3 = 壁 × 29 + ペンキ）。古い版は起動時に一度だけ今の版へ置きかえて保存し直す
-//     p なし: 旧16色 / p: 2: ペンキ 1〜29 のみ（壁は全体で1つ）→ どちらも当時選んでいた壁として扱う
-import { st, MAX, NPAINT, NVAL, wallIndex } from '../state.js';
+//   teratool1.paint.work.<id>     … 作品の中身 { p: 4, w, h, d, navRow }
+//   p = マスの値の付け方の版。古い版は起動時に一度だけ今の版へ置きかえて保存し直す（works/migrate.js）
+import { st, MAX, NVAL } from '../state.js';
 import { uid, toast } from '../util.js';
 import { sampleWork } from './sample.js';
+import { PAINT_VERSION, maxValue, convertValue, legacyWall, convertSel } from './migrate.js';
+
+export { PAINT_VERSION };
+let oldWall = 0; // 壁が全体で1つだった版の作品を読むときの壁（古い設定から）
 
 const P = 'teratool1.paint.';
 const K_SETTINGS = P + 'settings', K_INDEX = P + 'works', K_LEGACY = P + 'v1';
@@ -26,34 +29,24 @@ export function encode(d) {
   for (let i = 0; i < d.length; i++) s += String.fromCharCode(48 + d[i]);
   return s;
 }
-export function decode(s, n) {
+export function decode(s, n, max = NVAL) {
   if (typeof s !== 'string' || s.length !== n) return null;
   const d = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     const v = s.charCodeAt(i) - 48;
-    if (v < 0 || v > NVAL) return null;
+    if (v < 0 || v > max) return null;
     d[i] = v;
   }
   return d;
 }
 
-// 旧16色（濃い12色 + 黒・白・グレー・茶）→ 新しい番号（1 + PAINTS の位置）
-const OLD = { 1: 14, 2: 18, 3: 17, 4: 25, 5: 24, 6: 23, 7: 22, 8: 21, 9: 20, 10: 19, 11: 16, 12: 15, 13: 27, 14: 28, 15: 29, 16: 26 };
-export const PAINT_VERSION = 3;
-
 // 保存形式（d は文字列）を検証して { w, h, d: Uint8Array, navRow } に
 export function parseWork(o) {
   if (!o || !Number.isInteger(o.w) || !Number.isInteger(o.h)) return null;
   if (o.w < 1 || o.h < 1 || o.w > MAX || o.h > MAX) return null;
-  const d = decode(o.d, o.w * o.h);
+  const d = decode(o.d, o.w * o.h, maxValue(o.p));
   if (!d) return null;
-  if (o.p !== PAINT_VERSION) {
-    const old = o.p !== 2, max = old ? 16 : NPAINT, base = wallIndex() * NPAINT;
-    for (let i = 0; i < d.length; i++) {
-      if (d[i] > max) return null;
-      if (d[i]) d[i] = (old ? OLD[d[i]] : d[i]) + base;
-    }
-  }
+  if (o.p !== PAINT_VERSION) for (let i = 0; i < d.length; i++) d[i] = convertValue(d[i], o.p, oldWall);
   const navRow = Number.isInteger(o.navRow) && o.navRow >= 0 && o.navRow < o.h ? o.navRow : o.h - 1;
   return { w: o.w, h: o.h, d, navRow };
 }
@@ -116,8 +109,8 @@ export function saveCurrent() {
 
 export function saveSettings() {
   write(K_SETTINGS, {
-    v: 3, grid: st.showGrid, major: st.showMajor, sel: st.sel, mirror: st.mirror, fromBottom: st.naviFromBottom,
-    colorMode: st.colorMode, gem: st.gem, lit: st.lit, current: st.workId,
+    v: 4, grid: st.showGrid, major: st.showMajor, sel: st.sel, recent: st.recent, mirror: st.mirror,
+    fromBottom: st.naviFromBottom, colorMode: st.colorMode, current: st.workId,
   });
 }
 
@@ -129,12 +122,11 @@ function applySettings(o) {
   if (!o) return;
   if (typeof o.grid === 'boolean') st.showGrid = o.grid;
   if (typeof o.major === 'boolean') st.showMajor = o.major;
-  // v3 より前の選択中の色は旧16色の番号
-  if (o.v >= 3 && Number.isInteger(o.sel) && o.sel >= 0 && o.sel <= NPAINT) st.sel = o.sel; // ペンキ番号
-  else if (OLD[o.sel]) st.sel = OLD[o.sel];
+  if (!(o.v >= 4)) oldWall = legacyWall(o);
+  const sel = convertSel(o);
+  if (sel !== null) st.sel = sel;
+  if (o.v >= 4 && Array.isArray(o.recent)) st.recent = o.recent.filter((v) => Number.isInteger(v) && v > 0 && v <= NVAL).slice(0, 12);
   if (o.colorMode === 'world' || o.colorMode === 'map') st.colorMode = o.colorMode;
-  if (o.gem === 'other' || o.gem === 'diamond') st.gem = o.gem;
-  if (typeof o.lit === 'boolean') st.lit = o.lit;
   if (typeof o.mirror === 'boolean') st.mirror = o.mirror;
   if (typeof o.fromBottom === 'boolean') st.naviFromBottom = o.fromBottom;
 }

@@ -65,7 +65,7 @@ function flood(x, y, val) {
 }
 
 function pick(c) {
-  pickValue(st.data[c.y * st.W + c.x]); // ペンキと壁の両方。何もないマスなら「透過」
+  pickValue(st.data[c.y * st.W + c.x]); // 何もないマスなら「透過」
   setTool('pen');
 }
 

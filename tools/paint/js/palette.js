@@ -1,22 +1,13 @@
-// 道具の切り替え・ペンキの一覧・下のバーの表示・集計
-import { st, NPAINT, refreshRgb, paintName, shortName, brushValue, cellValue, wallIndex, paintOf, wallOf } from './state.js';
-import { WALLS as WALL_DEFS } from './paints.js';
-import { syncColorControls } from './colorset.js';
+// 道具の切り替え・色の一覧・下のバーの表示・集計
+//   色の一覧: 透過 / 最近使った色 / 壁ごと（ダイヤ以外・光オフ …）に28色ずつ。どの色も直接選ぶ
+import { st, NPAINT, refreshRgb, shortName, valueName, cellValue, WALL_LABELS } from './state.js';
 import { $, el } from './util.js';
 import { cv, markDirty, schedule } from './render.js';
 import { scheduleSave } from './works/store.js';
 import { closePops } from './popups.js';
 
-// 一覧のまとまり（ペンキ番号: 0 = 透過, 1〜29）。色は「これから塗る壁」のもの
-const GROUPS = [
-  ['透過・塗り無し', [0, 1]],
-  ['普通のペンキ', range(2, 13)],
-  ['濃いペンキ', range(14, 25)],
-  ['茶・黒・白・灰色', range(26, 29)],
-];
-function range(a, b) { const r = []; for (let i = a; i <= b; i++) r.push(i); return r; }
-
-const swEls = new Map(), badgeEls = new Map();
+const RECENT_MAX = 12;
+const swatches = []; // { b, v, n }（n = マス数の表示）
 const TOOL_NAMES = { pen: 'ペン', fill: '塗りつぶし', pick: 'スポイト', pan: '移動', line: '直線', rect: '四角', ellipse: '円' };
 
 export function updateCursor() {
@@ -38,75 +29,94 @@ export function setMirror(on) {
   schedule(); scheduleSave();
 }
 
-// p = ペンキ番号（0 = 透過）。今の「塗る壁」の色で見せる
-function paintChip(node, p) {
-  node.classList.toggle('is-clear', p === 0);
-  if (p) node.style.setProperty('--c', st.hex[cellValue(p, wallIndex()) - 1]);
+function paintChip(node, v) {
+  node.classList.toggle('is-clear', v === 0);
+  if (v) node.style.setProperty('--c', st.hex[v - 1]);
 }
 
 export function refreshSel() {
-  swEls.forEach((b, p) => b.setAttribute('aria-pressed', String(p === st.sel)));
-  $('selName').textContent = shortName(brushValue());
-  $('selName2').textContent = '選択中：' + shortName(brushValue());
+  for (const s of swatches) s.b.setAttribute('aria-pressed', String(s.v === st.sel));
+  $('selName').textContent = shortName(st.sel);
+  $('selName2').textContent = '選択中：' + valueName(st.sel);
   paintChip($('colorChip'), st.sel);
 }
 
-// スポイト: マスの値から、ペンキと壁の両方を選ぶ
-export function pickValue(v) {
-  if (v) {
-    const w = WALL_DEFS[wallOf(v)];
-    st.gem = w.gem; st.lit = w.lit;
-    syncColorControls(); applyColors();
-  }
-  setSel(paintOf(v));
-}
-
-// 色を選んだら、描けない道具（移動・スポイト）からペンに戻す
+// 色を選ぶ（スポイトからも）。描けない道具（移動・スポイト）からはペンに戻す
 export function setSel(v) {
-  st.sel = v; refreshSel();
+  st.sel = v;
+  if (v) { st.recent = [v, ...st.recent.filter((x) => x !== v)].slice(0, RECENT_MAX); renderRecent(); }
+  refreshSel();
   if (st.tool === 'pan' || st.tool === 'pick') setTool('pen');
   scheduleSave();
+}
+export const pickValue = setSel;
+
+function swatch(v, withCount) {
+  const b = el('button', 'sw'); b.type = 'button'; b.title = valueName(v);
+  paintChip(b, v);
+  const n = el('span', 'n'); if (withCount) b.appendChild(n);
+  b.addEventListener('click', () => { setSel(v); closePops(); });
+  const s = { b, v, n: withCount ? n : null };
+  swatches.push(s);
+  return b;
+}
+
+function group(title, cls) {
+  const g = el('div', 'pal-group');
+  g.appendChild(el('h4', null, title));
+  const row = el('div', 'pal-row ' + (cls || ''));
+  g.appendChild(row);
+  return [g, row];
+}
+
+let recentRow = null;
+function renderRecent() {
+  if (!recentRow) return;
+  for (let i = swatches.length - 1; i >= 0; i--) if (swatches[i].recent) swatches.splice(i, 1);
+  recentRow.textContent = '';
+  for (const v of st.recent) { recentRow.appendChild(swatch(v, false)); swatches[swatches.length - 1].recent = true; }
+  recentRow.parentElement.hidden = !st.recent.length;
+  for (const s of swatches) if (s.recent) s.b.setAttribute('aria-pressed', String(s.v === st.sel));
 }
 
 export function buildPalette() {
   const box = $('palette');
-  box.textContent = '';
-  for (const [title, values] of GROUPS) {
-    const g = el('div', 'pal-group');
-    g.appendChild(el('h4', null, title));
-    const row = el('div', 'pal-row');
-    for (const v of values) {
-      const b = el('button', 'sw'); b.type = 'button'; b.title = paintName(v);
-      paintChip(b, v);
-      const n = el('span', 'n'); b.appendChild(n);
-      b.addEventListener('click', () => { setSel(v); closePops(); });
-      row.appendChild(b); swEls.set(v, b); badgeEls.set(v, n);
-    }
-    g.appendChild(row); box.appendChild(g);
+  box.textContent = ''; swatches.length = 0;
+  const [g0, r0] = group('透過（何も置かない）');
+  r0.appendChild(swatch(0, false));
+  box.appendChild(g0);
+  const [gr, rr] = group('最近使った色');
+  recentRow = rr; box.appendChild(gr);
+  // 壁の順: ダイヤ以外・光オフ → ダイヤ以外・光オン → ダイヤ・光オフ → ダイヤ・光オン
+  for (const wall of [0, 2, 1, 3]) {
+    const [g, row] = group(WALL_LABELS[wall], 'paints');
+    for (let p = 1; p <= NPAINT; p++) row.appendChild(swatch(cellValue(p, wall), true));
+    box.appendChild(g);
   }
+  renderRecent();
   refreshSel();
 }
 
-// 見え方（ゲーム画面/全体マップ・壁・光）が変わったときに色を塗り直す
+// 見え方（ゲーム画面 / 全体マップ）が変わったときに色を塗り直す
 export function applyColors() {
   refreshRgb();
-  swEls.forEach((b, p) => paintChip(b, p));
-  refreshSel(); markDirty(); // マス数の表示も「塗る壁」に合わせて更新される
+  for (const s of swatches) paintChip(s.b, s.v);
+  refreshSel(); markDirty();
 }
 
-// マス数（＝必要なペンキの数）。一覧の数字は、今の「塗る壁」でのそのペンキのマス数
+// 色ごとのマス数（＝必要なペンキの数）を表示
 export function updateCounts() {
   const c = new Map();
   for (let i = 0; i < st.data.length; i++) { const v = st.data[i]; if (v) c.set(v, (c.get(v) || 0) + 1); }
   let total = 0;
   c.forEach((n) => { total += n; });
-  const wall = wallIndex();
-  for (let p = 1; p <= NPAINT; p++) {
-    const n = c.get(cellValue(p, wall)) || 0;
-    badgeEls.get(p).textContent = n ? String(n) : '';
-    swEls.get(p).setAttribute('aria-label', paintName(p) + (n ? '（' + n + 'マス）' : ''));
+  for (const s of swatches) {
+    if (!s.n) continue;
+    const n = c.get(s.v) || 0;
+    s.n.textContent = n ? String(n) : '';
+    s.b.setAttribute('aria-label', valueName(s.v) + (n ? '（' + n + 'マス）' : ''));
   }
-  $('stats').textContent = total + 'マス・' + c.size + '種類';
+  $('stats').textContent = total + 'マス・' + c.size + '色';
 }
 
 export function updateSizeUI() {

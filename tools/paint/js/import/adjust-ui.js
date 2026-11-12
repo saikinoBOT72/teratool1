@@ -1,17 +1,18 @@
-// 取り込み時の編集（背景・色・使うペンキ・仕上げ）の操作と、その設定値
-import { st, NPAINT, NWALL, paintName, shortName, cellValue, wallIndex, WALL_LABELS } from '../state.js';
+// 取り込み時の編集（背景・色・使う色のオプション・仕上げ）の操作と、その設定値
+// 使う色は基本は全部（28色 × 壁4種）。オプションで壁の種類・ペンキをしぼれる
+import { st, NPAINT, NWALL, paintName, shortName, valueName, cellValue, WALL_LABELS } from '../state.js';
 import { $, el } from '../util.js';
 
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
-const OTHERS = range(26, 29); // 茶・黒・白・灰色
+const OTHERS = range(25, 28); // 茶・黒・白・灰色
 const PRESETS = {
-  standard: range(2, 29),            // 塗り無し以外（ダイヤ以外の壁では、塗り無しは青と同じ色になるため）
-  all: range(1, 29),
-  normal: [...range(2, 13), ...OTHERS],
-  deep: [...range(14, 25), ...OTHERS],
+  all: range(1, NPAINT),
+  normal: [...range(1, 12), ...OTHERS],
+  deep: [...range(13, 24), ...OTHERS],
 };
+const WALL_ORDER = [0, 2, 1, 3];
 const SLIDERS = ['impBright', 'impContrast', 'impSat', 'impHue'];
-const ui = { allowed: new Set(PRESETS.standard), clear: new Set(), flipH: false, flipV: false, rot: 0 };
+const ui = { allowed: new Set(PRESETS.all), walls: new Set(range(0, NWALL - 1)), clear: new Set(), flipH: false, flipV: false, rot: 0 };
 let onChange = () => {};
 
 export function getOptions(photo) {
@@ -19,8 +20,8 @@ export function getOptions(photo) {
     bg: $('impBg').checked, trim: $('impTrim').checked, dither: photo && $('impDither').checked,
     bright: +$('impBright').value, contrast: +$('impContrast').value, sat: +$('impSat').value, hue: +$('impHue').value,
     allowed: [...ui.allowed].sort((a, b) => a - b),
-    walls: $('impAllWalls').checked ? Array.from({ length: NWALL }, (_, i) => i) : [wallIndex()],
-    clear: ui.clear, despeckle: $('impSpeck').checked, outline: cellValue(+$('impOutline').value, wallIndex()),
+    walls: [...ui.walls].sort((a, b) => a - b),
+    clear: ui.clear, despeckle: $('impSpeck').checked, outline: +$('impOutline').value,
     flipH: ui.flipH, flipV: ui.flipV, rot: ui.rot,
   };
 }
@@ -58,8 +59,9 @@ function renderClear() {
 function renderAllowed() {
   const box = $('impAllowed');
   box.textContent = '';
+  const showWall = Math.min(...ui.walls);
   for (let p = 1; p <= NPAINT; p++) {
-    const b = chipOf(cellValue(p, wallIndex()), paintName(p));
+    const b = chipOf(cellValue(p, showWall), paintName(p));
     b.setAttribute('aria-pressed', String(ui.allowed.has(p)));
     b.addEventListener('click', () => {
       if (ui.allowed.has(p)) { if (ui.allowed.size > 1) ui.allowed.delete(p); } else ui.allowed.add(p);
@@ -67,7 +69,22 @@ function renderAllowed() {
     });
     box.appendChild(b);
   }
-  $('impAllowedCount').textContent = `${ui.allowed.size}/${NPAINT}色`;
+  const n = ui.allowed.size * ui.walls.size;
+  $('impAllowedCount').textContent = n === NPAINT * NWALL ? `全部 ${n}色` : `${n}色`;
+}
+
+function renderWalls() {
+  const box = $('impWalls');
+  box.textContent = '';
+  for (const w of WALL_ORDER) {
+    const b = chipOf(cellValue(13, w), WALL_LABELS[w]); // 見本は濃い赤
+    b.setAttribute('aria-pressed', String(ui.walls.has(w)));
+    b.addEventListener('click', () => {
+      if (ui.walls.has(w)) { if (ui.walls.size > 1) ui.walls.delete(w); } else ui.walls.add(w);
+      renderWalls(); renderAllowed(); onChange();
+    });
+    box.appendChild(b);
+  }
 }
 
 function renderTransform() {
@@ -76,11 +93,8 @@ function renderTransform() {
   $('impRot').textContent = ui.rot ? `右に回す（${ui.rot * 90}°）` : '右に回す';
 }
 
-// 見え方・塗る壁が変わったときに見本の色と説明を合わせる
-export function refreshAdjustColors() {
-  renderAllowed(); renderClear();
-  $('impWallInfo').textContent = `今の「塗る壁」（${WALL_LABELS[wallIndex()]}）の色で置きかえます。`;
-}
+// 見え方（ゲーム画面 / 全体マップ）が変わったときに見本の色を合わせる
+export function refreshAdjustColors() { renderWalls(); renderAllowed(); renderClear(); }
 
 export function initAdjust(cb) {
   onChange = cb;
@@ -97,10 +111,14 @@ export function initAdjust(cb) {
     ui.allowed = new Set(PRESETS[b.dataset.preset]); renderAllowed(); onChange();
   });
   const sel = $('impOutline');
-  for (let v = 1; v <= NPAINT; v++) { const o = el('option', null, paintName(v)); o.value = v; sel.appendChild(o); }
-  ['impBg', 'impTrim', 'impSpeck', 'impOutline', 'impAllWalls'].forEach((id) => $(id).addEventListener('change', onChange));
+  for (const w of WALL_ORDER) {
+    const g = el('optgroup'); g.label = WALL_LABELS[w];
+    for (let p = 1; p <= NPAINT; p++) { const o = el('option', null, valueName(cellValue(p, w))); o.value = cellValue(p, w); g.appendChild(o); }
+    sel.appendChild(g);
+  }
+  ['impBg', 'impTrim', 'impSpeck', 'impOutline'].forEach((id) => $(id).addEventListener('change', onChange));
   $('impFlipH').addEventListener('click', () => { ui.flipH = !ui.flipH; renderTransform(); onChange(); });
   $('impFlipV').addEventListener('click', () => { ui.flipV = !ui.flipV; renderTransform(); onChange(); });
   $('impRot').addEventListener('click', () => { ui.rot = (ui.rot + 1) & 3; renderTransform(); onChange(); });
-  renderAllowed(); renderTransform();
+  renderWalls(); renderAllowed(); renderTransform();
 }

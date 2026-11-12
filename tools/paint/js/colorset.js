@@ -1,12 +1,10 @@
-// 見え方（ゲーム画面 / 全体マップ）の切り替えと、これから塗る壁（ダイヤ以外 / ダイヤ、光オフ / オン）の選択。
-// ペンキ一覧とメニューの両方に置く
+// 見え方（ゲーム画面 / 全体マップ）の切り替え。色の一覧とメニューの両方に置く
+// （ダイヤ・光の違いは色の一覧で直接選ぶので、ここにはない）
 import { st } from './state.js';
 import { el } from './util.js';
 
 const GROUPS = [
   { key: 'colorMode', label: '見え方', opts: [['world', 'ゲーム画面'], ['map', '全体マップ']] },
-  { key: 'gem', label: '塗る壁の種類', opts: [['other', 'ダイヤ以外'], ['diamond', 'ダイヤ']] },
-  { key: 'lit', label: '塗る壁の光', opts: [[false, '光オフ'], [true, '光オン']] },
 ];
 const buttons = [];
 

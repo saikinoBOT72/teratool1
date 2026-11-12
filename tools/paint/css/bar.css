@@ -20,7 +20,7 @@
 /* 開いた一覧（バーの上に重ねる。キャンバスの大きさは変えない） */
 .pop {
   position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); z-index: 15;
-  max-height: min(64vh, 520px); overflow-y: auto;
+  max-height: min(70vh, 560px); overflow-y: auto;
   padding: 10px; border: 1px solid var(--line); border-radius: 14px;
   background: var(--panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
   display: grid; gap: 10px;
@@ -35,20 +35,19 @@
 .tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .tool[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 
-/* ペンキ一覧: 透過・塗り無し / 普通 / 濃い / 茶黒白灰 をまとまりごとに */
+/* 色の一覧: 透過 / 最近使った色 / 壁ごとの28色。1行12色なので、壁ごとに 普通12 / 濃い12 / 茶黒白灰4 の3行になる */
 .palette { display: grid; gap: 8px; }
 .pal-group { display: grid; gap: 4px; }
 .pal-group h4 { margin: 0; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; }
-.pal-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
-@media (min-width: 480px) { .pal-row { grid-template-columns: repeat(12, minmax(0, 1fr)); } }
+.pal-row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; }
 .sw {
   position: relative; aspect-ratio: 1; min-width: 0; padding: 0;
-  background: var(--c); border: 1px solid rgba(127, 127, 127, 0.5); border-radius: 8px;
+  background: var(--c); border: 1px solid rgba(127, 127, 127, 0.5); border-radius: 6px;
 }
-.sw[aria-pressed="true"] { outline: 3px solid var(--ring); outline-offset: 2px; }
+.sw[aria-pressed="true"] { outline: 3px solid var(--ring); outline-offset: 1px; z-index: 1; }
 .sw .n {
-  position: absolute; right: 2px; bottom: 2px; padding: 2px 3px; border-radius: 4px;
-  background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums;
+  position: absolute; right: 1px; bottom: 1px; padding: 1px 2px; border-radius: 3px;
+  background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 9px; line-height: 1; font-variant-numeric: tabular-nums;
 }
 .sw .n:empty { display: none; }
 .status { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }

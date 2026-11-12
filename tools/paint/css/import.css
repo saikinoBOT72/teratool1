@@ -1,4 +1,22 @@
-/* 画像の取り込み */
+/* 画像の取り込み。結果を上（広い画面は左）に固定して、調整しながら見られるようにする */
+#importSheet .sheet { max-width: 980px; max-height: calc(100% - 8px); }
+.imp-body { display: grid; gap: 0; }
+.imp-result {
+  position: sticky; top: 56px; z-index: 1; /* シートの見出しの下に貼りつく */
+  display: grid; gap: 6px; padding: 10px 0; background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.imp-result .preview { min-height: 0; height: min(26vh, 230px); padding: 6px; }
+.imp-result .preview canvas { max-height: none; }
+#impStart.loaded > .hint { display: none; } /* 読み込んだ後は説明を隠して場所をあける */
+.imp-result .hint { min-height: 1.6em; }
+.imp-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (min-width: 880px) {
+  .imp-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .imp-result { border-bottom: 0; }
+  .imp-result .preview { height: min(62vh, 560px); }
+  .imp-controls section:first-child { border-top: 0; }
+}
+
 .imp-src {
   position: relative; display: grid; place-items: center; padding: 8px;
   border: 1px solid var(--line); border-radius: 10px; background: var(--stage); overflow: hidden;
@@ -11,11 +29,11 @@
 }
 .seg label:has(input:checked) { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .seg input { margin: 0; }
-.imp-drop { outline: 3px dashed var(--ring); outline-offset: -6px; }
 .warn { color: #c62828; }
-.sliders { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px; }
-.sliders label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; color: var(--muted); }
-.sliders input[type="range"] { grid-column: 1 / -1; width: 100%; }
+
+.sliders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; }
+.sliders label { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; font-size: 12px; color: var(--muted); }
+.sliders input[type="range"] { grid-column: 1 / -1; width: 100%; margin: 4px 0; }
 .sliders output { font-variant-numeric: tabular-nums; color: var(--fg); }
 .allowed summary { cursor: pointer; font-size: 14px; font-weight: 500; padding: 6px 0; }
 .allowed { display: grid; gap: 8px; }
@@ -26,3 +44,5 @@
 .allowed-grid .pchip[aria-pressed="false"] { opacity: 0.4; text-decoration: line-through; }
 #impPrev { cursor: pointer; }
 .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+#impStart.loaded { padding-block: 8px; }
+#impStart.loaded .btn { min-height: 36px; padding: 0 12px; font-size: 13px; }

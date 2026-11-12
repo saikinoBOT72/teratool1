@@ -43,6 +43,7 @@ export function loadImageFile(file) {
       src.jpeg = /jpe?g/i.test(file.type) && src.w === im.naturalWidth;
       baseName = (file.name || '').replace(/\.[^.]+$/, '').trim().slice(0, 30);
       $('impBody').hidden = false;
+      $('impStart').classList.add('loaded');
       resetForNewImage();
       view.setImage(src.canvas);
       setCrop({ x: 0, y: 0, w: src.w, h: src.h });
@@ -115,11 +116,20 @@ function remap() {
     id.data[o] = c[0]; id.data[o + 1] = c[1]; id.data[o + 2] = c[2]; id.data[o + 3] = 255; used.add(v);
   });
   x.putImageData(id, 0, 0);
-  pc.style.width = Math.min(480, result.w * Math.max(1, Math.floor(220 / Math.max(result.w, result.h)))) + 'px';
+  sizePreview();
   let info = `${result.w} × ${result.h}マス・${used.size}色`;
   if (result.removed) info += `・背景 ${result.removed}マスを透明に`;
   if (result.clipped) info += '。200マスを超えた部分は切り捨てました';
   $('impInfo').textContent = info;
+}
+
+// 結果の絵を枠いっぱいに（縦横比はそのまま）
+function sizePreview() {
+  const pc = $('impPrev'), box = pc.parentElement;
+  if (!result || result.empty) return;
+  const k = Math.min((box.clientWidth - 14) / result.w, (box.clientHeight - 14) / result.h);
+  if (!(k > 0)) return;
+  pc.style.width = Math.floor(result.w * k) + 'px'; pc.style.height = Math.floor(result.h * k) + 'px';
 }
 
 function apply(asNew) {
@@ -165,4 +175,5 @@ export function initImporter() {
   $('impReplace').addEventListener('click', () => apply(false));
 
   initSources(loadImageFile);
+  new ResizeObserver(sizePreview).observe($('impPrev').parentElement);
 }
