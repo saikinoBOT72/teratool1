@@ -1,14 +1,14 @@
 // 道具の切り替え・ペンキのパレット・色の調整・状態表示
 import { st, DEFAULTS, refreshRgb } from './state.js';
 import { $ } from './util.js';
-import { cv, markDirty } from './render.js';
-import { scheduleSave } from './storage.js';
+import { cv, markDirty, schedule } from './render.js';
+import { scheduleSave } from './works/store.js';
 
 const palEl = $('palette');
 let swEls = [], badgeEls = [], palInputs = [];
 
 export function updateCursor() {
-  cv.style.cursor = (st.tool === 'pan' || st.spaceDown) ? 'grab' : 'crosshair';
+  cv.style.cursor = (st.mode === 'navi') ? 'pointer' : (st.tool === 'pan' || st.spaceDown) ? 'grab' : 'crosshair';
 }
 
 export function setTool(t) {
@@ -17,11 +17,18 @@ export function setTool(t) {
   updateCursor();
 }
 
+export function setMirror(on) {
+  st.mirror = on;
+  $('btnMirror').setAttribute('aria-pressed', String(on));
+  schedule(); scheduleSave();
+}
+
 export function refreshSel() {
   swEls.forEach((b, i) => b.setAttribute('aria-pressed', String(i + 1 === st.sel)));
   $('selName').textContent = '選択中：' + DEFAULTS[st.sel - 1][0];
 }
 
+// 色を選んだら、描けない道具（消しゴム等）からペンに戻す
 export function setSel(v) {
   st.sel = v; refreshSel();
   if (st.tool === 'eraser' || st.tool === 'pan' || st.tool === 'pick') setTool('pen');
@@ -55,11 +62,17 @@ export function buildPalEditor() {
   });
 }
 
-export function resetPalette() {
-  st.pal = DEFAULTS.map((d) => d[1]); refreshRgb();
+// 色の調整を反映し直す（初期化・バックアップからの復元時）
+export function syncPalette() {
+  refreshRgb();
   swEls.forEach((b, i) => b.style.setProperty('--c', st.pal[i]));
   palInputs.forEach((inp, i) => { inp.value = st.pal[i]; });
   markDirty(); scheduleSave();
+}
+
+export function resetPalette() {
+  st.pal = DEFAULTS.map((d) => d[1]);
+  syncPalette();
 }
 
 // 色ごとのマス数（＝必要なペンキの数）を表示
@@ -77,5 +90,7 @@ export function updateCounts() {
 
 export function updateSizeUI() {
   $('sizeLabel').textContent = st.W + ' × ' + st.H + 'マス';
+  $('workName').textContent = st.workName || 'ペンキドット絵';
+  document.title = (st.workName ? st.workName + ' - ' : '') + 'ペンキドット絵';
   $('inW').value = st.W; $('inH').value = st.H;
 }

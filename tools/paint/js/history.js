@@ -5,7 +5,7 @@ import { cancelStroke } from './draw.js';
 import { markDirty } from './render.js';
 import { fit } from './view.js';
 import { updateSizeUI } from './palette.js';
-import { scheduleSave } from './storage.js';
+import { scheduleSave } from './works/store.js';
 
 const LIMIT = 80;
 const undoStack = [], redoStack = [];
@@ -18,6 +18,9 @@ export function pushUndo(s) {
   redoStack.length = 0;
   updateHist();
 }
+
+// 作品を切り替えたときなど
+export function clearHistory() { undoStack.length = 0; redoStack.length = 0; updateHist(); }
 
 // 絵の中身が変わった後の共通処理
 export function afterData(sizeChanged) {

@@ -4,8 +4,6 @@ import { hexToRgb } from './util.js';
 export const MAX = 200;          // キャンバスの最大マス数
 export const MIN_SCALE = 0.5;    // 表示倍率の下限
 export const MAX_SCALE = 64;     // 表示倍率の上限
-// GitHub Pages では同じユーザーの全リポジトリが同じオリジンを共有するため、キーに名前空間を付ける
-export const STORAGE_KEY = 'teratool1.paint.v1';
 
 // 濃いペンキ12色 + 濃い版がない黒・白・グレー・茶。見た目は白いブロックに塗った想定の近似値（手で調整したもの）。
 export const DEFAULTS = [
@@ -17,12 +15,22 @@ export const DEFAULTS = [
 
 // data の各マス: 0 = 空, 1〜16 = DEFAULTS の番号 + 1
 export const st = {
+  // 作品
+  workId: null, workName: '',
   W: 16, H: 16, data: new Uint8Array(16 * 16),
+  // 色・道具
   pal: DEFAULTS.map((d) => d[1]), rgbs: [],
-  sel: 1, tool: 'pen', showGrid: true, showMajor: true,
+  sel: 1, tool: 'pen', mirror: false,
+  // 表示
+  showGrid: true, showMajor: true,
   view: { x: 0, y: 0, s: 12 }, autoFit: true,
   hover: null, lastCell: null, spaceDown: false,
   dirty: true,
+  // 建築ナビ
+  mode: 'edit',            // 'edit' | 'navi'
+  navRow: 0,               // いま見ている行（0 = 一番上）
+  done: new Set(),         // 完了した行
+  naviFromBottom: true,    // 下の行から作る
 };
 
 export function refreshRgb() { st.rgbs = st.pal.map(hexToRgb); }

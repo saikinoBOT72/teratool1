@@ -6,7 +6,7 @@ Terraria を遊ぶときに使う、自分用の小さな Web ツール集。
 ## ツール
 | ツール | 内容 | 説明 |
 | --- | --- | --- |
-| ペンキドット絵 | 16色のペンキでドット絵の設計図を描く | [tools/paint/README.md](tools/paint/README.md) |
+| ペンキドット絵 | 16色のペンキでドット絵の設計図を描く。建築ナビ・画像の取り込みつき | [tools/paint/README.md](tools/paint/README.md) |
 
 ## 使い方
 ビルド不要の静的サイトです。
@@ -17,12 +17,15 @@ Terraria を遊ぶときに使う、自分用の小さな Web ツール集。
   # → http://localhost:8000/
   ```
 - **GitHub Pages**: Settings → Pages → Source を「Deploy from a branch」、ブランチ `main` / フォルダ `/ (root)` にする
+- **スマホ**: ブラウザの「ホーム画面に追加」でアプリのように使える。一度開いたツールはオフラインでも動く
 
 ## 構成
 ```
 index.html            トップページ（ツール選択）
 assets/base.css       全ページ共通の色・リセット
 assets/home.css       トップページ用
+assets/pwa.js         オフライン対応（Service Worker の登録）
+sw.js, manifest.webmanifest  オフライン対応・ホーム画面に追加
 tools/<ツール名>/     ツールごとのフォルダ（index.html / CSS / js/ / README.md）
 ```
 ツールを追加するときは `tools/` にフォルダを作り、`index.html` のツール一覧にカードを足します。

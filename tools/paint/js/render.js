@@ -14,6 +14,9 @@ const bg = document.createElement('canvas');
 const bctx = bg.getContext('2d');
 let bgKey = '';
 let raf = 0;
+// 絵の上に重ねて描くもの（建築ナビの行表示など）。fn(ctx, cw, ch)
+const overlays = [];
+export function addOverlay(fn) { overlays.push(fn); }
 
 function rebuildImage() {
   const { W, H, data, rgbs } = st;
@@ -76,6 +79,17 @@ function drawHover() {
   }
 }
 
+// 左右対称モードの中心線
+function drawMirrorAxis(h) {
+  const v = st.view, x = Math.round(v.x + (st.W / 2) * v.s) + 0.5;
+  ctx.save();
+  ctx.setLineDash([6, 4]);
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.beginPath(); ctx.moveTo(x, v.y - 6); ctx.lineTo(x, v.y + h + 6); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.stroke();
+  ctx.restore();
+}
+
 function render() {
   const dpr = window.devicePixelRatio || 1;
   const cw = stage.clientWidth, ch = stage.clientHeight;
@@ -100,7 +114,10 @@ function render() {
   ctx.lineWidth = 1;
   ctx.strokeRect(Math.floor(v.x) - 0.5, Math.floor(v.y) - 0.5, Math.round(w) + 1, Math.round(h) + 1);
 
-  if (st.hover && st.tool !== 'pan' && !st.spaceDown) drawHover();
+  const editing = st.mode === 'edit';
+  if (editing && st.mirror) drawMirrorAxis(h);
+  for (const fn of overlays) fn(ctx, cw, ch);
+  if (editing && st.hover && st.tool !== 'pan' && !st.spaceDown) drawHover();
 }
 
 // すぐに描き直す（fit 直後など）

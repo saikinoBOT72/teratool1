@@ -5,9 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#172026">
 <title>ペンキドット絵</title>
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="../../assets/base.css">
-<link rel="stylesheet" href="paint.css">
+<link rel="stylesheet" href="css/paint.css">
+<link rel="stylesheet" href="css/sheet.css">
+<link rel="stylesheet" href="css/navi.css">
+<link rel="stylesheet" href="css/works.css">
+<link rel="stylesheet" href="css/import.css">
 </head>
 <body>
 <div class="app">
@@ -17,7 +24,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
       </a>
       <div class="brand">
-        <h1>ペンキドット絵</h1>
+        <h1><button type="button" id="btnWorks" class="brand-btn" title="作品の一覧"><span id="workName">ペンキドット絵</span></button></h1>
         <p id="sizeLabel">16 × 16マス</p>
       </div>
     </div>
@@ -48,39 +55,59 @@
   </main>
 
   <section class="dock" aria-label="道具とペンキ">
-    <div class="tools" id="tools" role="toolbar" aria-label="道具">
-      <button class="tool" type="button" data-tool="pen" aria-pressed="true" title="ペン (B)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/></svg>ペン
-      </button>
-      <button class="tool" type="button" data-tool="eraser" aria-pressed="false" title="消しゴム (E)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15l8.5-8.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11 20H7z"/><path d="M9 11l5 5"/></svg>消しゴム
-      </button>
-      <button class="tool" type="button" data-tool="fill" aria-pressed="false" title="塗りつぶし (F)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l6-6 7 7-6 6a2 2 0 0 1-2.8 0L5 13.8a2 2 0 0 1 0-2.8z"/><path d="M19 15s2 2.2 2 3.5a2 2 0 0 1-4 0c0-1.3 2-3.5 2-3.5z"/></svg>塗りつぶし
-      </button>
-      <button class="tool" type="button" data-tool="pick" aria-pressed="false" title="スポイト (I)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l4 4"/><path d="M17.5 2.8a2 2 0 0 1 2.8 2.8l-2.3 2.3-2.8-2.8z"/><path d="M14 8.5L5 17.5V20h2.5l9-9"/></svg>スポイト
-      </button>
-      <button class="tool" type="button" data-tool="pan" aria-pressed="false" title="移動 (H)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 6-6 6-3 0-4.5-1.5-6-4l-1.7-3a1.5 1.5 0 0 1 2.6-1.5L8 14"/></svg>移動
-      </button>
+    <div class="edit-panel" id="editPanel">
+      <div class="tools" id="tools" role="toolbar" aria-label="道具">
+        <button class="tool" type="button" data-tool="pen" aria-pressed="true" title="ペン (B)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/></svg>ペン</button>
+        <button class="tool" type="button" data-tool="eraser" aria-pressed="false" title="消しゴム (E)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15l8.5-8.5a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11 20H7z"/><path d="M9 11l5 5"/></svg>消しゴム</button>
+        <button class="tool" type="button" data-tool="fill" aria-pressed="false" title="塗りつぶし (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l6-6 7 7-6 6a2 2 0 0 1-2.8 0L5 13.8a2 2 0 0 1 0-2.8z"/><path d="M19 15s2 2.2 2 3.5a2 2 0 0 1-4 0c0-1.3 2-3.5 2-3.5z"/></svg>塗りつぶし</button>
+        <button class="tool" type="button" data-tool="pick" aria-pressed="false" title="スポイト (I)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l4 4"/><path d="M17.5 2.8a2 2 0 0 1 2.8 2.8l-2.3 2.3-2.8-2.8z"/><path d="M14 8.5L5 17.5V20h2.5l9-9"/></svg>スポイト</button>
+        <button class="tool" type="button" data-tool="line" aria-pressed="false" title="直線 (L)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L19 5"/><path d="M4 18h2v2H4zM18 4h2v2h-2z"/></svg>直線</button>
+        <button class="tool" type="button" data-tool="rect" aria-pressed="false" title="四角 (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v12H5z"/></svg>四角</button>
+        <button class="tool" type="button" data-tool="ellipse" aria-pressed="false" title="円 (O)"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg>円</button>
+        <button class="tool" type="button" data-tool="pan" aria-pressed="false" title="移動 (H)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 6-6 6-3 0-4.5-1.5-6-4l-1.7-3a1.5 1.5 0 0 1 2.6-1.5L8 14"/></svg>移動</button>
+      </div>
+      <div class="opts">
+        <button class="opt" type="button" id="btnMirror" aria-pressed="false" title="左右対称 (M)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5zM15 7l5 5-5 5z"/></svg>左右対称</button>
+        <button class="opt" type="button" id="btnNavi" title="建築ナビ (N)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M15 9l3 3-3 3"/></svg>建築ナビ</button>
+      </div>
+      <div class="palette" id="palette" role="group" aria-label="ペンキの色"></div>
+      <div class="status"><span id="selName"></span><span id="stats"></span></div>
     </div>
-    <div class="palette" id="palette" role="group" aria-label="ペンキの色"></div>
-    <div class="status"><span id="selName"></span><span id="stats"></span></div>
+
+    <div class="navi-panel" id="naviPanel" hidden>
+      <div class="navi-head">
+        <div class="navi-title"><strong id="naviRow"></strong><span id="naviProgress"></span></div>
+        <button class="opt" type="button" id="naviDir"></button>
+      </div>
+      <ol class="runs" id="naviRuns" aria-live="polite"></ol>
+      <div class="navi-actions">
+        <button class="btn" type="button" id="naviPrev">前の行</button>
+        <button class="btn primary" type="button" id="naviDone" aria-pressed="false">完了</button>
+        <button class="btn" type="button" id="naviNext">次の行</button>
+      </div>
+      <div class="navi-foot">
+        <button class="btn" type="button" id="naviExit">編集に戻る</button>
+        <button class="btn" type="button" id="naviReset">チェックを全部外す</button>
+      </div>
+    </div>
   </section>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<div class="scrim" id="scrim" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+<div class="scrim" id="menuSheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
     <div class="sheet-head">
-      <h2 id="sheetTitle">メニュー</h2>
-      <button class="ib" id="btnClose" type="button" aria-label="閉じる">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
+      <h2 id="menuTitle">メニュー</h2>
+      <button class="ib" type="button" data-close aria-label="閉じる"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
-
+    <section>
+      <h3>作品</h3>
+      <div class="row">
+        <button class="btn" id="menuWorks" type="button">作品の一覧・バックアップ</button>
+        <button class="btn primary" id="menuImport" type="button">画像を取り込む</button>
+      </div>
+    </section>
     <section>
       <h3>キャンバスのサイズ</h3>
       <div class="chips" id="presets">
@@ -98,33 +125,6 @@
       <p class="hint">最大200マス。大きくすると右と下に広がり、小さくすると右と下が切れます。元に戻せます。</p>
       <div><button class="btn" id="btnClear" type="button">全部消す</button></div>
     </section>
-
-    <section>
-      <h3>画像を取り込む</h3>
-      <p class="hint">写真や絵を、使える16色に置きかえます。書き出したPNG（1倍）もそのまま読み込めます。画像はこの端末の中だけで処理され、どこにも送信されません。</p>
-      <input type="file" id="importFile" accept="image/*">
-      <div id="importBody" hidden style="display:grid;gap:10px">
-        <div class="row">
-          <label for="importSize">長辺のマス数
-            <select id="importSize">
-              <option value="0">原寸</option>
-              <option value="16">16</option>
-              <option value="32">32</option>
-              <option value="48">48</option>
-              <option value="64" selected>64</option>
-              <option value="96">96</option>
-              <option value="128">128</option>
-              <option value="200">200</option>
-            </select>
-          </label>
-          <label class="chk" for="importDither"><input type="checkbox" id="importDither">ディザ（網点で階調を出す）</label>
-        </div>
-        <div class="preview"><canvas id="importPrev" aria-label="取り込み結果のプレビュー"></canvas></div>
-        <p class="hint" id="importInfo"></p>
-        <div><button class="btn primary" id="btnImport" type="button">この内容で取り込む</button></div>
-      </div>
-    </section>
-
     <section>
       <h3>PNGで書き出す</h3>
       <div class="row">
@@ -137,17 +137,15 @@
         </label>
         <button class="btn primary" id="btnExport" type="button">PNGを保存</button>
       </div>
-      <div id="exportFallback" hidden style="display:grid;gap:8px">
+      <div id="exportFallback" class="stack" hidden>
         <p class="hint">ダウンロードが始まらない場合は、下の画像を長押し（または右クリック）して保存してください。</p>
         <img id="exportImg" alt="書き出した画像">
       </div>
     </section>
-
     <section>
       <h3>表示</h3>
       <label class="chk" for="chkMajor"><input type="checkbox" id="chkMajor" checked>10マスごとに濃い線を入れる</label>
     </section>
-
     <section>
       <h3>色の調整</h3>
       <p class="hint">白い単色ブロックに塗ったときの見た目を想定した色です。ゲーム画面と見比べて、ずれていたら直せます。</p>
@@ -158,5 +156,6 @@
 </div>
 
 <script type="module" src="js/main.js"></script>
+<script type="module" src="../../assets/pwa.js"></script>
 </body>
 </html>

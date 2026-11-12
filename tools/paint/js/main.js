@@ -4,19 +4,22 @@ import { st, refreshRgb } from './state.js';
 import { $ } from './util.js';
 import { stage, schedule } from './render.js';
 import { fit, zoomCenter, toggleGrid } from './view.js';
-import { loadSaved, loadSample, save } from './storage.js';
+import { boot, save } from './works/store.js';
 import { undo, redo, updateHist } from './history.js';
-import { buildPalette, buildPalEditor, setTool, updateSizeUI } from './palette.js';
+import { buildPalette, buildPalEditor, setTool, setMirror, updateSizeUI } from './palette.js';
 import { initInput } from './input.js';
 import { initMenu } from './menu.js';
-import { initImporter } from './importer.js';
+import { initNavi } from './navi/navi.js';
+import { initWorks } from './works/sheet.js';
+import { initImporter } from './import/index.js';
 
-if (!loadSaved()) loadSample();
+boot();
 refreshRgb();
 buildPalette();
 buildPalEditor();
 $('btnGrid').setAttribute('aria-pressed', String(st.showGrid));
 $('chkMajor').checked = st.showMajor;
+$('btnMirror').setAttribute('aria-pressed', String(st.mirror));
 setTool('pen');
 updateSizeUI();
 updateHist();
@@ -29,15 +32,19 @@ $('zIn').addEventListener('click', () => zoomCenter(1));
 $('zOut').addEventListener('click', () => zoomCenter(-1));
 $('zFit').addEventListener('click', () => { st.autoFit = true; fit(); });
 document.querySelectorAll('.tool').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
+$('btnMirror').addEventListener('click', () => setMirror(!st.mirror));
 
 initInput();
 initMenu();
+initNavi();
+initWorks();
 initImporter();
 
 // テーマ（ライト/ダーク）が変わったら描き直す
 try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', schedule); } catch (_) { /* old browsers */ }
 new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 window.addEventListener('pagehide', save);
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 
 new ResizeObserver(() => { if (st.autoFit) fit(); else schedule(); }).observe(stage);
 requestAnimationFrame(fit);

@@ -4,9 +4,10 @@ import { clamp } from './util.js';
 import { cv, schedule } from './render.js';
 import { zoomAt, zoomCenter, stepUp, stepDown, panBy, updateReadout, toggleGrid } from './view.js';
 import { cellAt, beginAction, continueStroke, endStroke, cancelStroke } from './draw.js';
-import { setTool, updateCursor } from './palette.js';
+import { setTool, setMirror, updateCursor } from './palette.js';
 import { undo, redo } from './history.js';
-import { sheetOpen, closeSheet } from './menu.js';
+import { sheetOpen, closeSheet } from './sheet.js';
+import { enterNavi, exitNavi, selectRow, step, toggleDone } from './navi/navi.js';
 
 const pointers = new Map();
 let mode = null;   // 'draw' | 'pan' | 'gesture' | 'none' | null
@@ -48,7 +49,8 @@ function onDown(e) {
   const mouse = e.pointerType === 'mouse';
   if (mouse && (e.button === 1 || e.button === 2)) { startPan(p); return; } // 中・右ボタンで移動
   if (mouse && e.button !== 0) return;
-  if (st.spaceDown || st.tool === 'pan') { startPan(p); return; }
+  if (st.spaceDown || (st.tool === 'pan' && st.mode === 'edit')) { startPan(p); return; }
+  if (st.mode === 'navi') { mode = 'navi'; selectRow(cellAt(p.x, p.y)); return; }
   mode = 'draw'; beginAction(p);
 }
 
@@ -56,11 +58,12 @@ function onMove(e) {
   const p = local(e);
   if (pointers.has(e.pointerId)) pointers.set(e.pointerId, p);
   const c = cellAt(p.x, p.y);
-  if (e.pointerType === 'mouse') { st.hover = c; schedule(); }
+  if (e.pointerType === 'mouse' && st.mode === 'edit') { st.hover = c; schedule(); }
   if (c) { st.lastCell = c; updateReadout(); }
   if (mode === 'gesture') doGesture();
   else if (mode === 'pan' && panLast) { panBy(p.x - panLast.x, p.y - panLast.y); panLast = p; }
-  else if (mode === 'draw') continueStroke(c);
+  else if (mode === 'draw') continueStroke(p);
+  else if (mode === 'navi' && c && c.y !== st.navRow) selectRow(c); // なぞって行を選ぶ
 }
 
 function onUp(e) {
@@ -79,7 +82,19 @@ function onUp(e) {
   schedule();
 }
 
-const KEY_TOOLS = { b: 'pen', e: 'eraser', f: 'fill', i: 'pick', h: 'pan' };
+const KEY_TOOLS = { b: 'pen', e: 'eraser', f: 'fill', i: 'pick', h: 'pan', l: 'line', r: 'rect', o: 'ellipse' };
+
+// 建築ナビ中のキー: ↑↓ で行を移動、Enter で完了、N で編集に戻る
+function naviKey(e, k) {
+  if (k === 'arrowup' || k === 'arrowdown') {
+    e.preventDefault();
+    step((k === 'arrowup') === st.naviFromBottom ? 1 : -1);
+  } else if (k === 'enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); toggleDone(); }
+  else if (k === 'n') exitNavi();
+  else if (k === 'g') toggleGrid();
+  else if (k === '+' || k === '=') zoomCenter(1);
+  else if (k === '-') zoomCenter(-1);
+}
 
 function onKeyDown(e) {
   const tag = e.target && e.target.tagName;
@@ -91,7 +106,10 @@ function onKeyDown(e) {
   if (mod && k === 'y') { e.preventDefault(); redo(); return; }
   if (mod || e.altKey || sheetOpen()) return;
   if (k === ' ' && tag !== 'BUTTON') { e.preventDefault(); st.spaceDown = true; updateCursor(); return; }
+  if (st.mode === 'navi') { naviKey(e, k); return; }
   if (KEY_TOOLS[k]) setTool(KEY_TOOLS[k]);
+  else if (k === 'm') setMirror(!st.mirror);
+  else if (k === 'n') enterNavi();
   else if (k === 'g') toggleGrid();
   else if (k === '+' || k === '=') zoomCenter(1);
   else if (k === '-') zoomCenter(-1);

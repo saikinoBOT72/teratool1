@@ -1,42 +1,51 @@
-// 描く・消す・塗りつぶし・スポイト
+// 描く・消す・塗りつぶし・図形・スポイト（左右対称に対応）
 import { st } from './state.js';
+import { clamp } from './util.js';
 import { markDirty, schedule } from './render.js';
 import { snapshot, pushUndo } from './history.js';
 import { setTool, refreshSel } from './palette.js';
-import { scheduleSave } from './storage.js';
+import { scheduleSave } from './works/store.js';
+import { plotLine, plotRect, plotEllipse } from './shapes.js';
 
-let stroke = null; // { snap, last, changed }
+const SHAPES = { line: plotLine, rect: plotRect, ellipse: plotEllipse };
+let stroke = null; // { snap, last, start, changed }
 
-export function cellAt(px, py) {
+// キャンバス上の座標 → マス。clampIt なら範囲外でも端のマスにする
+export function cellAt(px, py, clampIt = false) {
   const v = st.view;
-  const x = Math.floor((px - v.x) / v.s), y = Math.floor((py - v.y) / v.s);
+  let x = Math.floor((px - v.x) / v.s), y = Math.floor((py - v.y) / v.s);
+  if (clampIt) { x = clamp(x, 0, st.W - 1); y = clamp(y, 0, st.H - 1); }
   return (x >= 0 && y >= 0 && x < st.W && y < st.H) ? { x, y } : null;
 }
 
-function put(x, y, val) {
+const mirrorX = (x) => st.W - 1 - x;
+
+function put1(x, y, val) {
+  if (x < 0 || y < 0 || x >= st.W || y >= st.H) return;
   const i = y * st.W + x;
   if (st.data[i] !== val) { st.data[i] = val; stroke.changed = true; st.dirty = true; }
 }
-
-// ブレゼンハムの直線（素早く動かしても途切れないように）
-function line(x0, y0, x1, y1, val) {
-  const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
-  let err = dx + dy;
-  for (;;) {
-    put(x0, y0, val);
-    if (x0 === x1 && y0 === y1) break;
-    const e2 = 2 * err;
-    if (e2 >= dy) { err += dy; x0 += sx; }
-    if (e2 <= dx) { err += dx; y0 += sy; }
-  }
+function put(x, y, val) {
+  put1(x, y, val);
+  if (st.mirror) put1(mirrorX(x), y, val);
 }
+
+const strokeValue = () => (st.tool === 'eraser' ? 0 : st.sel);
 
 function paintTo(c) {
   if (!c) { stroke.last = null; return; }
-  const val = st.tool === 'eraser' ? 0 : st.sel;
-  if (stroke.last) line(stroke.last.x, stroke.last.y, c.x, c.y, val); else put(c.x, c.y, val);
+  const val = strokeValue();
+  if (stroke.last) plotLine(stroke.last.x, stroke.last.y, c.x, c.y, (x, y) => put(x, y, val));
+  else put(c.x, c.y, val);
   stroke.last = c;
+}
+
+// 図形はドラッグ中ずっと「元に戻してから描き直す」ことでプレビューする
+function shapeTo(c) {
+  st.data.set(stroke.snap.d);
+  stroke.changed = false;
+  SHAPES[st.tool](stroke.start.x, stroke.start.y, c.x, c.y, (x, y) => put(x, y, st.sel));
+  st.dirty = true;
 }
 
 // 4方向の塗りつぶし。変化がなければ false
@@ -55,29 +64,35 @@ function flood(x, y, val) {
   return true;
 }
 
-// 押した瞬間の処理。p はキャンバス上の座標
-export function beginAction(p) {
-  const c = cellAt(p.x, p.y);
-  if (c) st.lastCell = c;
-  if (st.tool === 'pick') {
-    if (!c) return;
-    const v = st.data[c.y * st.W + c.x];
-    if (v) { st.sel = v; refreshSel(); setTool('pen'); scheduleSave(); } else { setTool('eraser'); }
-    return;
-  }
-  if (st.tool === 'fill') {
-    if (!c) return;
-    const snap = snapshot();
-    if (flood(c.x, c.y, st.sel)) { pushUndo(snap); markDirty(); scheduleSave(); }
-    return;
-  }
-  stroke = { snap: snapshot(), last: null, changed: false };
-  paintTo(c); schedule();
+function pick(c) {
+  const v = st.data[c.y * st.W + c.x];
+  if (v) { st.sel = v; refreshSel(); setTool('pen'); scheduleSave(); } else { setTool('eraser'); }
 }
 
-export function continueStroke(c) {
+// 押した瞬間の処理。p はキャンバス上の座標
+export function beginAction(p) {
+  const shape = !!SHAPES[st.tool];
+  const c = cellAt(p.x, p.y);
+  if (c) st.lastCell = c;
+  if (!c) return;
+  if (st.tool === 'pick') { pick(c); return; }
+  if (st.tool === 'fill') {
+    const snap = snapshot();
+    let changed = flood(c.x, c.y, st.sel);
+    if (st.mirror) changed = flood(mirrorX(c.x), c.y, st.sel) || changed;
+    if (changed) { pushUndo(snap); markDirty(); scheduleSave(); }
+    return;
+  }
+  stroke = { snap: snapshot(), last: null, start: c, changed: false };
+  if (shape) shapeTo(c); else paintTo(c);
+  schedule();
+}
+
+export function continueStroke(p) {
   if (!stroke) return;
-  paintTo(c); schedule();
+  if (SHAPES[st.tool]) shapeTo(cellAt(p.x, p.y, true));
+  else paintTo(cellAt(p.x, p.y));
+  schedule();
 }
 
 export function endStroke() {

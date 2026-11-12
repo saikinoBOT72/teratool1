@@ -1,0 +1,15 @@
+/* 画像の取り込み */
+.imp-src {
+  position: relative; display: grid; place-items: center; padding: 8px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--stage); overflow: hidden;
+}
+.imp-src canvas { display: block; touch-action: none; cursor: crosshair; max-width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg label {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); font-size: 14px; cursor: pointer;
+}
+.seg label:has(input:checked) { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.seg input { margin: 0; }
+.imp-drop { outline: 3px dashed var(--ring); outline-offset: -6px; }
+.warn { color: #c62828; }

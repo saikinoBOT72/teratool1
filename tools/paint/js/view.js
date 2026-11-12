@@ -2,7 +2,7 @@
 import { st, MIN_SCALE, MAX_SCALE } from './state.js';
 import { $, clamp } from './util.js';
 import { stage, frame, schedule } from './render.js';
-import { scheduleSave } from './storage.js';
+import { scheduleSave } from './works/store.js';
 
 export function updateReadout() {
   let t = '';
@@ -12,15 +12,16 @@ export function updateReadout() {
 }
 
 // 全体が収まるように表示する
+// 下の拡大縮小ボタンに重ならないよう、下側は広めに空ける
 export function fit() {
-  const cw = stage.clientWidth, ch = stage.clientHeight, pad = 14;
+  const cw = stage.clientWidth, ch = stage.clientHeight, pad = 14, padBottom = 58;
   if (!cw || !ch) return;
-  let s = Math.min((cw - pad * 2) / st.W, (ch - pad * 2) / st.H);
+  let s = Math.min((cw - pad * 2) / st.W, (ch - pad - padBottom) / st.H);
   s = s >= 1 ? Math.floor(s) : Math.max(MIN_SCALE, s);
   s = clamp(s, MIN_SCALE, MAX_SCALE);
   st.view.s = s;
   st.view.x = Math.round((cw - st.W * s) / 2);
-  st.view.y = Math.round((ch - st.H * s) / 2);
+  st.view.y = Math.round(pad + (ch - pad - padBottom - st.H * s) / 2);
   frame(); updateReadout();
 }
 
